@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.title + ' - Beta Community'}">Chi tiết bài viết</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #4F46E5; --border: rgba(255,255,255,0.1); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a, #1e1b4b, #312e81); min-height: 100vh; color: #f8fafc; padding: 40px 20px; background-size: 400% 400%; animation: gradientBG 15s ease infinite; }
+        @keyframes gradientBG { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        .container { max-width: 720px; margin: 0 auto; }
+        .nav-back { display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 0.9rem; text-decoration: none; margin-bottom: 24px; transition: color 0.2s; }
+        .nav-back:hover { color: #f8fafc; }
+        .post-card { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 24px; padding: 36px 40px; backdrop-filter: blur(24px); margin-bottom: 24px; }
+        .post-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #818cf8, #c084fc); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; flex-shrink: 0; }
+        .author-name { font-weight: 700; font-size: 0.95rem; }
+        .post-date { color: #64748b; font-size: 0.82rem; }
+        .post-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 20px; line-height: 1.3; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; }
+        .post-content { color: #cbd5e1; line-height: 1.8; font-size: 1rem; white-space: pre-wrap; word-break: break-word; }
+        .post-actions { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+        /* Like Button */
+        #like-btn { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: #94a3b8; padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        #like-btn.liked { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+        #like-btn:hover { transform: scale(1.05); }
+        #like-btn .heart-icon { transition: transform 0.2s; }
+        #like-btn:active .heart-icon { transform: scale(1.4); }
+        .login-to-like { color: #64748b; font-size: 0.85rem; text-decoration: none; }
+        .login-to-like:hover { color: #94a3b8; }
+        .delete-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; padding: 8px 16px; border-radius: 30px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .delete-btn:hover { background: rgba(239,68,68,0.2); }
+        /* Comments */
+        .comments-section { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 24px; padding: 30px 36px; backdrop-filter: blur(20px); }
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+        .comment-item { display: flex; gap: 14px; margin-bottom: 20px; }
+        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0ea5e9, #6366f1); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+        .comment-body { flex: 1; background: rgba(255,255,255,0.05); border-radius: 14px; padding: 12px 16px; }
+        .comment-header { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; }
+        .comment-author { font-weight: 700; font-size: 0.88rem; }
+        .comment-date { font-size: 0.78rem; color: #64748b; }
+        .comment-text { color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; }
+        .no-comments { color: #64748b; font-size: 0.9rem; text-align: center; padding: 20px 0; }
+        .btn-reply { background: none; border: none; color: #818cf8; font-size: 0.8rem; font-weight: 600; cursor: pointer; margin-top: 8px; transition: 0.2s; }
+        .btn-reply:hover { color: #c084fc; text-decoration: underline; }
+        .replies-section { margin-left: 46px; border-left: 2px solid rgba(255,255,255,0.08); padding-left: 16px; margin-top: 12px; }
+        .reply-item { display: flex; gap: 10px; margin-bottom: 12px; }
+        .reply-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #f43f5e, #fb923c); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; flex-shrink: 0; }
+        .reply-body { flex: 1; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 14px; }
+        
+        /* Profile Tooltip */
+        .profile-tooltip { position: absolute; z-index: 1000; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; width: 280px; backdrop-filter: blur(12px); box-shadow: 0 10px 40px rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transform: translateY(10px); transition: all 0.2s; pointer-events: none; }
+        .profile-tooltip.active { opacity: 1; visibility: visible; transform: translateY(0); }
+        .tooltip-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .tooltip-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #818cf8, #c084fc); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; flex-shrink: 0; color: white; }
+        .tooltip-name { font-size: 1.1rem; font-weight: 700; color: white; display: block; line-height: 1.2;}
+        .tooltip-role { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(79, 70, 229, 0.2); color: #a5b4fc; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-top: 4px; font-weight: 700; }
+        .tooltip-body { font-size: 0.85rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; }
+        .tooltip-body b { color: #cbd5e1; }
+        .user-avatar { cursor: pointer; }
+
+        /* Comment Form */
+        .comment-form { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; }
+        .comment-form-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #818cf8, #c084fc); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+        .comment-input-wrap { flex: 1; display: flex; gap: 10px; }
+        .comment-input { flex: 1; background: rgba(15,23,42,0.5); border: 1px solid rgba(255,255,255,0.15); color: #f8fafc; padding: 11px 16px; border-radius: 12px; font-size: 0.9rem; outline: none; font-family: 'Inter', sans-serif; transition: 0.3s; }
+        .comment-input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129,140,248,0.2); }
+        .comment-input::placeholder { color: rgba(148,163,184,0.5); }
+        .comment-submit { background: var(--primary); color: white; border: none; padding: 11px 18px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .comment-submit:hover { background: #4338CA; }
+        .login-prompt { background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 14px 20px; text-align: center; color: #64748b; font-size: 0.9rem; margin-top: 20px; }
+        .login-prompt a { color: #818cf8; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a class="nav-back" th:href="@{/blog}">← Quay lại Blog</a>
+
+    <!-- Bài viết chính -->
+    <div class="post-card">
+        <div class="post-meta">
+            <div class="avatar user-avatar" 
+                 th:data-name="${post.author.name}" th:data-email="${post.author.email}"
+                 th:data-role="${post.author.role}" th:data-member="${post.author.membershipLevel}" th:data-points="${post.author.loyaltyPoint}"
+                 th:text="${#strings.substring(post.author.name, 0, 1)}"></div>
+            <div>
+                <div class="author-name" th:text="${post.author.name}"></div>
+                <div class="post-date" th:text="${#temporals.format(post.createdAt, 'HH:mm - dd/MM/yyyy')}"></div>
+            </div>
+        </div>
+        <div class="post-title" th:text="${post.title}"></div>
+        <div class="post-content" th:text="${post.content}"></div>
+
+        <div class="post-actions">
+            <!-- Nút Like (AJAX) — chỉ hiện khi đã đăng nhập -->
+            <button id="like-btn"
+                    th:classappend="${hasLiked ? ' liked' : ''}"
+                    th:data-post-id="${post.id}"
+                    sec:authorize="isAuthenticated()">
+                <span class="heart-icon">♥</span>
+                <span id="like-count" th:text="${likeCount}">0</span> thích
+            </button>
+
+            <!-- Chuỗi hiển thị cho khách vãng lai -->
+            <span sec:authorize="!isAuthenticated()">
+                <a class="login-to-like" th:href="@{/login}">♥ <span th:text="${likeCount}">0</span> thích – Đăng nhập để thả tim</a>
+            </span>
+
+            <!-- Hành động của tác giả hoặc Moderator -->
+            <div th:if="${currentUser != null}" style="margin-left: auto; display: flex; gap: 10px;">
+                <a th:if="${currentUser.email == post.author.email}" th:href="@{/blog/{id}/edit(id=${post.id})}" class="delete-btn" style="background: rgba(14,165,233,0.1); border-color: rgba(14,165,233,0.2); color: #38bdf8; text-decoration: none;"><i class="fas fa-edit"></i> Sửa bài</a>
+                <form th:if="${currentUser.email == post.author.email or currentUser.role.name() == 'MANAGER'}" 
+                      th:action="@{/blog/{id}/delete(id=${post.id})}" method="POST"
+                      onsubmit="return confirm('Bạn có chắc muốn xóa bài này?')">
+                    <button type="submit" class="delete-btn"><i class="fas fa-trash"></i> Xóa bài</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phần bình luận -->
+    <div class="comments-section">
+        <div class="section-title">💬 Bình luận (<span th:text="${post.commentCount}">0</span>)</div>
+
+        <div th:if="${post.topLevelComments.empty}" class="no-comments">Chưa có bình luận nào. Hãy là người đầu tiên!</div>
+
+        <!-- Vòng lặp đệ quy gọi fragment -->
+        <th:block th:replace="~{this :: commentList(${post.topLevelComments}, 0)}"></th:block>
+
+        <!-- Fragment đệ quy nội bộ để render reply n-level -->
+        <th:block th:fragment="commentList(comments, level)">
+            <div th:each="c : ${comments}" class="comment-thread" 
+                 th:style="${level > 0 ? 'margin-left: 40px; border-left: 2px solid rgba(255,255,255,0.08); padding-left: 12px; margin-top: 12px;' : 'margin-bottom: 24px;'}">
+                
+                <div class="comment-item" style="margin-bottom: 0;">
+                    <div class="comment-avatar user-avatar" th:style="${level > 0 ? 'width: 28px; height: 28px; font-size: 0.75rem;' : ''}"
+                         th:data-name="${c.author.name}" th:data-email="${c.author.email}"
+                         th:data-role="${c.author.role}" th:data-member="${c.author.membershipLevel}" th:data-points="${c.author.loyaltyPoint}"
+                         th:text="${#strings.substring(c.author.name, 0, 1)}"></div>
+                    <div class="comment-body" th:style="${level > 0 ? 'padding: 10px 14px;' : ''}">
+                        <div class="comment-header">
+                            <span class="comment-author" th:text="${c.author.name}"></span>
+                            <span class="comment-date" th:text="${#temporals.format(c.createdAt, 'dd/MM HH:mm')}"></span>
+                        </div>
+                        <div class="comment-text" th:id="'comment-text-' + ${c.id}">
+                            <span th:if="${level > 0 and c.parentComment != null and c.parentComment.parentComment != null}" 
+                                  style="color: #818cf8; font-weight: 600; font-size: 0.85rem;" 
+                                  th:text="'@' + ${c.parentComment.author.name} + ' '"></span>
+                            <span th:text="${c.content}"></span>
+                        </div>
+
+                        <!-- Form Edit Comment (Ẩn) -->
+                        <form th:id="'edit-comment-form-' + ${c.id}" style="display: none; margin-top: 8px;" th:action="@{/blog/comment/{commentId}/edit(commentId=${c.id})}" method="POST">
+                            <input type="hidden" name="postId" th:value="${post.id}" />
+                            <div style="display: flex; gap: 8px;">
+                                <input class="comment-input" style="padding: 6px 10px; font-size: 0.85rem; flex: 1;" type="text" name="content" th:value="${c.content}" required maxlength="500">
+                                <button type="submit" class="comment-submit" style="padding: 6px 12px;"><i class="fas fa-check"></i></button>
+                                <button type="button" class="btn-reply" style="margin: 0; padding: 0 8px; color: #94a3b8;" th:onclick="'toggleEditCommentForm(' + ${c.id} + ')'"><i class="fas fa-times"></i></button>
+                            </div>
+                        </form>
+
+                        <div style="display: flex; gap: 12px; align-items: center;" th:id="'comment-actions-' + ${c.id}">
+                            <button sec:authorize="isAuthenticated()" th:if="${currentUser != null and currentUser.email == c.author.email}" class="btn-reply" style="color: #cbd5e1; margin-top:0;" th:onclick="'toggleEditCommentForm(' + ${c.id} + ')'">Sửa</button>
+                            <button sec:authorize="isAuthenticated()" class="btn-reply" style="margin-top:0;" th:onclick="'toggleReplyForm(' + ${c.id} + ')'">Phản hồi</button>
+                            
+                            <!-- Moderator Nút Xóa Comment -->
+                            <form th:if="${currentUser != null and (currentUser.email == c.author.email or currentUser.role.name() == 'MANAGER')}"
+                                  th:action="@{/blog/comment/{commentId}/delete(commentId=${c.id})}" method="POST"
+                                  onsubmit="return confirm('Xóa bình luận này?')" style="margin:0;">
+                                <input type="hidden" name="postId" th:value="${post.id}" />
+                                <button type="submit" class="btn-reply" style="color: #fca5a5; margin-top:0;"><i class="fas fa-trash"></i> Xóa</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Reply (Ẩn) -->
+                <div th:id="'reply-form-' + ${c.id}" class="comment-form" style="display: none; border-top: none; padding-top: 10px; margin-top: 0;" th:styleappend="${level > 0 ? 'margin-left: 40px;' : 'margin-left: 46px;'}">
+                    <div class="comment-form-avatar" style="width: 28px; height: 28px; font-size: 0.75rem" th:text="${currentUser != null ? #strings.substring(currentUser.name, 0, 1) : '?'}"></div>
+                    <form th:action="@{/blog/{id}/comment(id=${post.id})}" method="POST" class="comment-input-wrap">
+                        <input type="hidden" name="parentId" th:value="${c.id}" />
+                        <input class="comment-input" style="padding: 8px 12px; font-size: 0.85rem;" type="text" name="content" th:placeholder="'Trả lời ' + ${c.author.name} + '...'" required maxlength="500">
+                        <button type="submit" class="comment-submit" style="padding: 8px 14px;"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+
+                <!-- Gọi đệ quy cho các câu trả lời con -->
+                <div th:if="${not #lists.isEmpty(c.replies)}">
+                    <!-- Giới hạn level thụt lề ở mức 2 (0 -> 1 -> 2) để tránh vỡ giao diện mobile -->
+                    <th:block th:replace="~{this :: commentList(${c.replies}, ${level >= 2 ? 2 : level + 1})}"></th:block>
+                </div>
+            </div>
+        </th:block>
+
+        <!-- Form comment — Đã đăng nhập -->
+        <div sec:authorize="isAuthenticated()" class="comment-form">
+            <div class="comment-form-avatar" th:text="${currentUser != null ? #strings.substring(currentUser.name, 0, 1) : '?'}"></div>
+            <form th:action="@{/blog/{id}/comment(id=${post.id})}" method="POST" class="comment-input-wrap">
+                <input class="comment-input" type="text" name="content" placeholder="Viết bình luận của bạn..." required maxlength="500" autofocus>
+                <button type="submit" class="comment-submit"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+
+        <!-- Khách vãng lai -->
+        <div sec:authorize="!isAuthenticated()" class="login-prompt">
+            <a th:href="@{/login}">Đăng nhập</a> để bình luận nhé!
+        </div>
+    </div>
+</div>
+
+<!-- Profile Tooltip -->
+<div id="profile-tooltip" class="profile-tooltip">
+    <div class="tooltip-header">
+        <div class="tooltip-avatar" id="tt-avatar">A</div>
+        <div>
+            <div class="tooltip-name" id="tt-name">User</div>
+            <div class="tooltip-role" id="tt-role">ROLE</div>
+        </div>
+    </div>
+    <div class="tooltip-body">
+        <div style="margin-bottom: 6px;">📧 <span id="tt-email">***</span></div>
+        <div style="margin-bottom: 6px;">🏆 Thành viên: <b id="tt-member">SILVER</b></div>
+        <div>💎 Tích lũy: <b id="tt-points">0</b> điểm</div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // AJAX Like Button
+    const likeBtn = document.getElementById('like-btn');
+    if (likeBtn) {
+        const postId = likeBtn.getAttribute('data-post-id');
+        const likeUrl = /*[[@{/blog/}]]*/ '/blog/' + postId + '/like';
+        
+        likeBtn.addEventListener('click', async function () {
+            try {
+                // Sửa thành URL tuyệt đối có chứa context path của Spring
+                const fetchUrl = /*[[@{/blog/}]]*/ '/blog/';
+                const res = await fetch(fetchUrl + postId + '/like', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (res.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const data = await res.json();
+                document.getElementById('like-count').textContent = data.likeCount;
+                likeBtn.classList.toggle('liked', data.liked);
+                // Animate heart
+                const heart = likeBtn.querySelector('.heart-icon');
+                heart.style.transform = 'scale(1.4)';
+                setTimeout(() => heart.style.transform = 'scale(1)', 200);
+            } catch (e) {
+                console.error('Lỗi thả tim:', e);
+            }
+        });
+    }
+    // Toggle Reply Form
+    function toggleReplyForm(commentId) {
+        const form = document.getElementById('reply-form-' + commentId);
+        if (form.style.display === 'none') {
+            document.querySelectorAll('div[id^="reply-form-"]').forEach(f => f.style.display = 'none');
+            form.style.display = 'flex';
+            form.querySelector('input[name="content"]').focus();
+        } else {
+            form.style.display = 'none';
+        }
+    }
+
+    // Toggle Edit Comment Form
+    function toggleEditCommentForm(commentId) {
+        const textEl = document.getElementById('comment-text-' + commentId);
+        const formEl = document.getElementById('edit-comment-form-' + commentId);
+        const actionsEl = document.getElementById('comment-actions-' + commentId);
+        
+        if (formEl.style.display === 'none') {
+            textEl.style.display = 'none';
+            actionsEl.style.display = 'none';
+            formEl.style.display = 'block';
+            formEl.querySelector('input[name="content"]').focus();
+        } else {
+            textEl.style.display = 'block';
+            actionsEl.style.display = 'flex';
+            formEl.style.display = 'none';
+        }
+    }
+
+    // Hover Profile Tooltip Logic
+    const tooltip = document.getElementById('profile-tooltip');
+    let tooltipTimeout;
+
+    document.querySelectorAll('.user-avatar').forEach(avatar => {
+        avatar.addEventListener('mouseenter', (e) => {
+            clearTimeout(tooltipTimeout);
+            const rect = avatar.getBoundingClientRect();
+            
+            const name = avatar.getAttribute('data-name') || '';
+            const email = avatar.getAttribute('data-email') || '';
+            const role = avatar.getAttribute('data-role') || '';
+            const member = avatar.getAttribute('data-member') || '';
+            const points = avatar.getAttribute('data-points') || '0';
+            
+            // Mask email (show first 2 chars before @)
+            let maskedEmail = email;
+            if (email.includes('@')) {
+                const parts = email.split('@');
+                maskedEmail = parts[0].length > 2 ? parts[0].substring(0,2) + '***@' + parts[1] : '***@' + parts[1];
+            }
+
+            document.getElementById('tt-avatar').textContent = name.charAt(0).toUpperCase();
+            document.getElementById('tt-name').textContent = name;
+            
+            // Format role display
+            let roleDisplay = role;
+            if (role === 'CUSTOMER') roleDisplay = 'Khách Hàng';
+            if (role === 'ADMIN') roleDisplay = 'Quản Trị Viên';
+            if (role === 'MANAGER') roleDisplay = 'Quản Lý';
+            document.getElementById('tt-role').textContent = roleDisplay;
+            
+            // Dynamic color for role badge
+            const roleEl = document.getElementById('tt-role');
+            if (role === 'ADMIN') { roleEl.style.background = 'rgba(239,68,68,0.2)'; roleEl.style.color = '#fca5a5'; }
+            else if (role === 'MANAGER') { roleEl.style.background = 'rgba(234,179,8,0.2)'; roleEl.style.color = '#fde047'; }
+            else { roleEl.style.background = 'rgba(79,70,229,0.2)'; roleEl.style.color = '#a5b4fc'; }
+
+            document.getElementById('tt-email').textContent = maskedEmail;
+            document.getElementById('tt-member').textContent = member;
+            document.getElementById('tt-points').textContent = points;
+
+            // Position tooltip dynamically
+            // Check if there is enough space to the right
+            let leftPosition = rect.left + window.scrollX;
+            if (leftPosition + 280 > window.innerWidth) { // 280 is tooltip width
+                leftPosition = window.innerWidth - 300; 
+            }
+            
+            tooltip.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+            tooltip.style.left = leftPosition + 'px';
+            tooltip.classList.add('active');
+        });
+
+        avatar.addEventListener('mouseleave', () => {
+            tooltipTimeout = setTimeout(() => {
+                tooltip.classList.remove('active');
+            }, 100);
+        });
+    });
+</script>
+</body>
+</html>

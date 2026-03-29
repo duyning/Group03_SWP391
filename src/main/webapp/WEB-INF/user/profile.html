@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile - Premium Experience</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-gradient-1: #0f172a;
+            --bg-gradient-2: #1e1b4b;
+            --bg-gradient-3: #312e81;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --card-bg: rgba(15, 23, 42, 0.4);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --error-bg: rgba(239, 68, 68, 0.1);
+            --error-text: #fca5a5;
+            --success-bg: rgba(34, 197, 94, 0.1);
+            --success-text: #86efac;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-gradient-1), var(--bg-gradient-2), var(--bg-gradient-3));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding: 40px 20px;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .profile-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            z-index: 10;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 40px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 8px;
+        }
+
+        .avatar-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(129, 140, 248, 0.4);
+        }
+
+        .header-info h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .header-info p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* Message Styles */
+        .message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .success-message {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .error-message {
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            background: rgba(15, 23, 42, 0.6);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .info-value {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge-silver {
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+            color: #0f172a;
+        }
+
+        .badge-gold {
+            background: linear-gradient(135deg, #fef08a, #ca8a04);
+            color: #422006;
+        }
+
+        .badge-plat {
+            background: linear-gradient(135deg, #cbd5e1, #64748b);
+            color: #ffffff;
+        }
+
+        .badge-admin {
+            background: linear-gradient(135deg, #fca5a5, #ef4444);
+            color: #ffffff;
+        }
+
+        .badge-manager {
+            background: linear-gradient(135deg, #fdf08a, #eab308);
+            color: #422006;
+        }
+
+        .badge-customer {
+            background: linear-gradient(135deg, #86efac, #22c55e);
+            color: #064e3b;
+        }
+
+        .status-active {
+            color: #86efac;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-blocked {
+            color: #fca5a5;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-active .status-dot {
+            background-color: #4ade80;
+            box-shadow: 0 0 8px #4ade80;
+        }
+
+        .status-blocked .status-dot {
+            background-color: #f87171;
+            box-shadow: 0 0 8px #f87171;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 24px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: fit-content;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* Decoration orbs */
+        .orb-1,
+        .orb-2 {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 1;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 350px;
+            height: 350px;
+            top: -50px;
+            right: -100px;
+            background: #818cf8;
+            animation: float 8s ease-in-out infinite alternate;
+        }
+
+        .orb-2 {
+            width: 450px;
+            height: 450px;
+            bottom: -100px;
+            left: -150px;
+            background: #c084fc;
+            animation: float 10s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) scale(1);
+            }
+
+            100% {
+                transform: translateY(-30px) scale(1.05);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .glass-card {
+                padding: 30px 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="profile-wrapper">
+    <div class="orb-1"></div>
+    <div class="orb-2"></div>
+
+    <div class="glass-card">
+
+        <div class="header">
+            <div class="avatar-wrapper" onclick="document.getElementById('avatarInput').click()" style="position: relative; cursor: pointer;">
+                <img th:if="${account.avatar != null}"
+                     th:src="@{'/assets/images/avatars/' + ${account.avatar}}"
+                     style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover;">
+
+                <div th:unless="${account.avatar != null}" class="avatar-circle"
+                     th:text="${#strings.substring(account.name,0,1)}">U</div>
+
+                <div style="position: absolute; bottom: 0; right: 0; background: var(--primary); border-radius: 50%; padding: 4px; display: flex;">
+                    <svg style="width:12px; height:12px; color:white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                </div>
+            </div>
+
+            <form id="avatarForm" th:action="@{/update-avatar}" method="post" enctype="multipart/form-data" style="display: none;">
+                <input type="file" id="avatarInput" name="avatarFile" accept="image/*" onchange="this.form.submit()">
+            </form>
+
+            <div class="header-info">
+                <h2 th:text="${account.name}">User Name</h2>
+                <p th:text="${account.email}">user@example.com</p>
+            </div>
+        </div>
+
+        <div th:if="${success}" class="message success-message">
+            <svg style="width:20px;height:20px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span th:text="${success}"></span>
+        </div>
+
+        <div th:if="${error}" class="message error-message">
+            <svg style="width:20px;height:20px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span th:text="${error}"></span>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <span class="info-label">Account ID</span>
+                <span class="info-value" th:text="${'#' + account.accountID}"></span>
+            </div>
+
+            <div class="info-card">
+                <span class="info-label">Status</span>
+                <span th:if="${account.status}" class="info-value status-active">
+                        <span class="status-dot"></span> Active
+                    </span>
+                <span th:unless="${account.status}" class="info-value status-blocked">
+                        <span class="status-dot"></span> Blocked
+                    </span>
+            </div>
+
+            <div class="info-card">
+                <span class="info-label">Role</span>
+                <div style="margin-top: 4px;">
+                        <span th:class="${'badge badge-' + #strings.toLowerCase(account.role)}"
+                              th:text="${account.role}"></span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <span class="info-label">Membership Level</span>
+                <div style="margin-top: 4px;">
+                        <span th:class="${'badge badge-' + #strings.toLowerCase(account.membershipLevel)}"
+                              th:text="${account.membershipLevel}"></span>
+                </div>
+            </div>
+
+            <div class="info-card full-width"
+                 style="flex-direction: row; justify-content: space-between; align-items: center;">
+                <span class="info-label" style="font-size: 0.9rem;">Loyalty Points</span>
+                <span class="info-value"
+                      style="font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #a78bfa, #c084fc); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;"
+                      th:text="${account.loyaltyPoint + ' pts'}"></span>
+            </div>
+
+            <div class="info-card">
+                <span class="info-label">Phone Number</span>
+                <span class="info-value" th:text="${account.phoneNum} ?: 'Not provided'"></span>
+            </div>
+
+            <div class="info-card">
+                <span class="info-label">Age</span>
+                <span class="info-value" th:text="${account.age}"></span>
+            </div>
+
+            <div class="info-card">
+                <span class="info-label">Gender</span>
+                <span class="info-value" th:text="${account.gender} ?: 'Not specified'"></span>
+            </div>
+
+            <div class="info-card full-width">
+                <span class="info-label">Address</span>
+                <span class="info-value" th:text="${account.address} ?: 'Not provided'"></span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <!-- Smart Back Buttons based on Role -->
+            <a sec:authorize="hasAnyRole('ADMIN', 'MANAGER')" th:href="@{/admin/dashboard}"
+               class="btn btn-secondary">
+                <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                Dashboard
+            </a>
+
+            <a sec:authorize="hasRole('CUSTOMER')" th:href="@{/booking/history}" class="btn btn-secondary">
+                <svg style="width:18px;height:18px;margin-right:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Vé đã đặt
+            </a>
+
+            <a sec:authorize="hasRole('CUSTOMER')" th:href="@{/user/vouchers/my_vouchers}" class="btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+                Voucher của tôi
+            </a>
+
+            <a sec:authorize="hasRole('CUSTOMER') and !hasAnyRole('ADMIN', 'MANAGER')" th:href="@{/home}"
+               class="btn btn-secondary">
+                <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                Home
+            </a>
+
+            <a th:href="@{/change-password}" class="btn btn-secondary">
+                <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Security
+            </a>
+            <a th:href="@{/edit-profile}" class="btn btn-primary">
+                <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit Profile
+            </a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+
+</html>

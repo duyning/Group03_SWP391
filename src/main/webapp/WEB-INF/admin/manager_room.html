@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Beta Cinemas | Admin Room Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* SỬ DỤNG LẠI ROOT CSS ĐỂ ĐỒNG BỘ MÀU SẮC */
+        :root {
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --primary: #0054a6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); display: flex; color: #1e293b; }
+
+        /* Sidebar & Layout */
+        .sidebar { width: 260px; background: var(--sidebar-bg); height: 100vh; color: #f8fafc; position: fixed; }
+        .sidebar-header { padding: 25px; font-size: 20px; font-weight: 800; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+        .sidebar-nav { list-style: none; padding: 15px 0; margin: 0; }
+        .sidebar-nav a { text-decoration: none; color: inherit; display: block; }
+        .sidebar-nav li { padding: 12px 25px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #94a3b8; transition: 0.2s; }
+        .sidebar-nav li:hover, .sidebar-nav li.active { background: var(--sidebar-hover); color: white; }
+        .sidebar-nav li.active { border-left: 4px solid var(--primary); }
+
+        .main { margin-left: 260px; flex: 1; padding: 30px; }
+
+        /* Header & Buttons */
+        .header-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-action { padding: 6px 12px; font-size: 12px; background: #f1f5f9; color: #475569; }
+        .btn-delete { background: #fee2e2; color: #dc2626; }
+
+        /* Table & Filter */
+        .table-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); }
+        .table-filter { padding: 25px; border-bottom: 1px solid #edf2f7; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .filter-input { padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; outline: none; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; padding: 15px; text-align: left; font-size: 12px; color: #64748b; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-content { background: white; width: 500px; border-radius: 12px; overflow: hidden; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #eee; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 15px; background: #f8fafc; display: flex; justify-content: center; gap: 10px; }
+
+        /* Status Pill */
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .status-on { background: #dcfce7; color: #15803d; }
+        .status-off { background: #fee2e2; color: #dc2626; }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="https://inansangtao.com/wp-content/uploads/2021/08/logo-beta-cineplex.png" height="35" style="filter: brightness(0) invert(1);">
+        <span>ADMIN</span>
+    </div>
+    <ul class="sidebar-nav">
+        <a th:href="@{/admin/dashboard}" style="text-decoration: none;"><li><i class="fas fa-chart-line"></i> Dashboard</li></a>
+        <a th:href="@{/admin/accounts}" style="text-decoration: none;"><li><i class="fas fa-users"></i> Quản lý tài khoản</li></a>
+        <a th:href="@{/admin/manager_movie}" style="text-decoration: none;"><li><i class="fas fa-film"></i> Quản lý phim</li></a>
+        <a th:href="@{/admin/manager_schedule}" style="text-decoration: none;"><li><i class="fas fa-calendar-alt"></i> Lịch chiếu</li></a>
+        <a th:href="@{/admin/manager_ticket_price}" style="text-decoration: none;"><li><i class="fas fa-tags"></i> Giá Vé & Loại Vé</li></a>
+        <a th:href="@{/admin/manager_combo}" style="text-decoration: none;">
+            <li><i class="fas fa-utensils"></i> Quản lý Combo</li>
+        </a>
+        <a th:href="@{/admin/manager_cinema}" style="text-decoration: none;"><li class="active"><i class="fas fa-theater-masks"></i> Rạp & Phòng</li></a>
+        <a th:href="@{/admin/manager_news}" style="text-decoration: none;">
+            <li><i class="fas fa-newspaper"></i> Quản lý tin tức</li>
+        </a>
+        <a th:href="@{/admin/manager_vouchers}" style="text-decoration: none;">
+            <li><i class="fas fa-ticket-alt"></i> Quản lý Voucher</li>
+        </a>
+        <a th:href="@{/profile}" style="text-decoration: none;">
+            <li><i class="fas fa-user-circle"></i> Thông tin cá nhân</li>
+        </a>
+        <a th:href="@{/logout}" style="text-decoration: none;">
+            <li><i class="fas fa-sign-out-alt"></i> Đăng xuất</li>
+        </a>
+    </ul>
+</aside>
+
+<main class="main">
+    <div id="successMessage" th:if="${message}" style="padding: 15px; background: #dcfce7; color: #15803d; border-radius: 8px; margin-bottom: 20px;">
+        <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
+    </div>
+
+    <div class="header-content">
+        <div>
+            <h1 style="margin: 0;">Quản lý Phòng chiếu</h1>
+            <p style="color: #64748b; margin: 5px 0 0 0;">Quản lý danh sách phòng cho rạp: <strong th:text="${cinema.cinemaName}">Tên Rạp</strong></p>
+        </div>
+        <button class="btn btn-primary" onclick="toggleModal('addRoomModal', true)">
+            <i class="fas fa-plus"></i> Thêm phòng mới
+        </button>
+    </div>
+
+    <div class="table-card">
+        <form th:action="@{/admin/room/search}" method="GET" class="table-filter">
+            <input type="hidden" name="cinemaId" th:value="${cinema.id}">
+
+            <div class="filter-group">
+                <label>Tên phòng</label>
+                <input type="text" name="roomName" th:value="${searchRoomName}" class="filter-input" placeholder="Phòng số...">
+            </div>
+
+            <div class="filter-group">
+                <label>Loại phòng</label>
+                <select name="roomType" class="filter-input">
+                    <option value="">-- Tất cả --</option>
+                    <option th:selected="${searchRoomType == '2D'}" value="2D">Phòng 2D</option>
+                    <option th:selected="${searchRoomType == '3D'}" value="3D">Phòng 3D</option>
+                    <option th:selected="${searchRoomType == 'IMAX'}" value="IMAX">Phòng IMAX</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Số ghế tối thiểu</label>
+                <input type="number" name="minSeats" th:value="${searchMinSeats}" class="filter-input" placeholder="Ví dụ: 50">
+            </div>
+
+            <div class="filter-group">
+                <label>Trạng thái</label>
+                <select name="status" class="filter-input">
+                    <option value="">-- Tất cả --</option>
+                    <option th:selected="${searchStatus == 'Hoạt động'}" value="Hoạt động">Hoạt động</option>
+                    <option th:selected="${searchStatus == 'Bảo trì'}" value="Bảo trì">Bảo trì</option>
+                    <option th:selected="${searchStatus == 'Tạm ngưng'}" value="Tạm ngưng">Tạm ngưng</option>
+                </select>
+            </div>
+
+            <div style="display: flex; align-items: flex-end; gap: 10px;">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Lọc</button>
+                <a th:href="@{/admin/room/manager(cinemaId=${cinema.id})}" class="btn btn-action">Reset</a>
+            </div>
+        </form>
+
+        <table>
+            <thead>
+            <tr>
+                <th>TÊN PHÒNG</th>
+                <th>LOẠI PHÒNG</th>
+                <th>SỐ GHẾ</th>
+                <th>TRẠNG THÁI</th>
+                <th style="text-align: right;">HÀNH ĐỘNG</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="room : ${rooms}">
+                <td th:text="${room.roomName}" style="font-weight: 600;">Phòng 01</td>
+                <td><span class="status-pill" style="background: #e2e8f0;" th:text="${room.roomType}">2D</span></td>
+                <td th:text="${room.totalSeats + ' Ghế'}">0 Ghế</td>
+                <td>
+                        <span class="status-pill" th:classappend="${room.status == 'Hoạt động' ? 'status-on' : 'status-off'}"
+                              th:text="${room.status}">Hoạt động</span>
+                </td>
+                <td style="text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
+                    <a th:href="@{/admin/seat/design(roomId=${room.id})}"
+                       class="btn btn-action"
+                       style="background-color: #f5f3ff; color: #7c3aed;"
+                       title="Thiết kế sơ đồ ghế">
+                        <i class="fas fa-th"></i> Thiết kế ghế
+                    </a>
+
+                    <a th:href="@{/admin/room/edit/{id}(id=${room.id})}" class="btn btn-action">
+                        <i class="fas fa-edit"></i> Sửa
+                    </a>
+
+                    <a th:href="@{/admin/room/delete(id=${room.id}, cinemaId=${cinema.id})}"
+                       class="btn btn-action btn-delete"
+                       onclick="return confirm('Xóa phòng sẽ xóa toàn bộ ghế liên quan. Tiếp tục?')">
+                        <i class="fas fa-trash"></i> Xóa
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div class="modal-overlay" id="addRoomModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="margin: 0; color: var(--primary); font-size: 18px;">Thêm phòng chiếu mới</h2>
+        </div>
+        <form th:action="@{/admin/room/add}" method="POST">
+            <input type="hidden" name="cinemaId" th:value="${cinema.id}">
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 5px; font-weight: 600;">Tên phòng</label>
+                    <input type="text" name="roomName" class="filter-input" style="width: 100%;" required placeholder="Ví dụ: Phòng 05">
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label style="display:block; margin-bottom: 5px; font-weight: 600;">Loại phòng</label>
+                        <select name="roomType" class="filter-input" style="width: 100%;">
+                            <option value="2D">2D</option>
+                            <option value="3D">3D</option>
+                            <option value="IMAX">IMAX</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display:block; margin-bottom: 5px; font-weight: 600;">Trạng thái</label>
+                        <select name="status" class="filter-input" style="width: 100%;">
+                            <option value="Hoạt động">Hoạt động</option>
+                            <option value="Bảo trì">Bảo trì</option>
+                            <option value="Tạm ngưng">Tạm ngưng</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" style="flex:1">Lưu phòng</button>
+                <button type="button" class="btn" style="flex:1; background: #eee;" onclick="toggleModal('addRoomModal', false)">Hủy</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-overlay" id="editRoomModal" th:style="${isEdit} ? 'display: flex;' : 'display: none;'">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="margin: 0; color: var(--warning); font-size: 18px;">Chỉnh sửa phòng chiếu</h2>
+        </div>
+        <form th:action="@{/admin/room/update}" th:object="${roomForm}" method="POST">
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" name="cinemaId" th:value="${cinema.id}">
+
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 5px; font-weight: 600;">Tên phòng</label>
+                    <input type="text" th:field="*{roomName}" class="filter-input" style="width: 100%;" required>
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label style="display:block; margin-bottom: 5px; font-weight: 600;">Loại phòng</label>
+                        <select th:field="*{roomType}" class="filter-input" style="width: 100%;">
+                            <option value="2D">2D</option>
+                            <option value="3D">3D</option>
+                            <option value="IMAX">IMAX</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display:block; margin-bottom: 5px; font-weight: 600;">Trạng thái</label>
+                        <select th:field="*{status}" class="filter-input" style="width: 100%;">
+                            <option value="Hoạt động">Hoạt động</option>
+                            <option value="Bảo trì">Bảo trì</option>
+                            <option value="Tạm ngưng">Tạm ngưng</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" style="flex:1; background: var(--warning);">Cập nhật</button>
+                <a th:href="@{/admin/room/manager(cinemaId=${cinema.id})}" class="btn" style="flex:1; background: #eee; text-decoration: none; justify-content: center; color: #1e293b;">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleModal(id, show) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.style.display = show ? 'flex' : 'none';
+        }
+    }
+
+    window.onclick = function (event) {
+        const addModal = document.getElementById('addRoomModal');
+        const editModal = document.getElementById('editRoomModal');
+
+        // Xử lý đóng Modal Thêm khi click ra ngoài
+        if (event.target === addModal) {
+            toggleModal('addRoomModal', false);
+        }
+
+        // Xử lý đóng Modal Sửa khi click ra ngoài
+        if (event.target === editModal) {
+            // Lấy cinemaId từ URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const cinemaId = urlParams.get('cinemaId');
+
+            if (cinemaId) {
+                // Chuyển hướng để làm sạch URL (bỏ phần /edit/id)
+                window.location.href = '/admin/room/manager?cinemaId=' + cinemaId;
+            } else {
+                // Nếu không thấy ID trên URL thì chỉ ẩn modal đi
+                toggleModal('editRoomModal', false);
+            }
+        }
+    };
+
+    // Tự động ẩn thông báo sau 5 giây
+    setTimeout(() => {
+        const msg = document.getElementById('successMessage');
+        if (msg) {
+            // Thêm hiệu ứng mờ dần (opacity về 0)
+            msg.style.transition = "opacity 0.5s ease";
+            msg.style.opacity = "0";
+
+            // Sau khi mờ hẳn (0.5s) thì mới ẩn hoàn toàn để không chiếm diện tích
+            setTimeout(() => {
+                msg.style.display = 'none';
+            }, 500);
+        }
+    }, 5000);
+</script>
+</body>
+</html>
