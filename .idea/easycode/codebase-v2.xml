@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="com.obiscr.chatgpt.settings.EasyCodeState">
+    <option name="projectFiles" value="$PROJECT_DIR$/src/main/java/example/config/ApplicationInitializer.java;C:/Users/USER/OneDrive/Desktop/SWT301/demo111/src/main/java/example/config/HibernateConfig.java;C:/Users/USER/OneDrive/Desktop/SWT301/demo111/src/main/java/example/config/SequenceInitializer.java;C:/Users/USER/OneDrive/Desktop/SWT301/demo111/src/main/java/example/config/WebMvcConfig.java;C:/Users/USER/OneDrive/Desktop/SWT301/demo111/src/main/java/example/controller/AdminController.java;C:/Users/USER/OneDrive/Desktop/SWT301/demo111/src/main/java/example/entity/Movie.java;C:/Users/USER/OneDrive/Desktop/SWT301/demo111/src/main/java/example/service/MovieService.java;C:/Users/USER/OneDrive/Desktop/SWT301/demo111/src/main/webapp/WEB-INF/admin/manager_movie.html" />
+  </component>
+</project>
