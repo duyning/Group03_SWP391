@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý bài đăng | Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --primary: #0054a6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); display: flex; color: #1e293b; }
+        .sidebar { width: 260px; background: var(--sidebar-bg); height: 100vh; color: #f8fafc; position: fixed; }
+        .sidebar-header { padding: 25px; font-size: 20px; font-weight: 800; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+        .sidebar-nav { list-style: none; padding: 15px 0; margin: 0; }
+        .sidebar-nav li { padding: 12px 25px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #94a3b8; transition: 0.2s; }
+        .sidebar-nav a { text-decoration: none; }
+        .sidebar-nav li:hover { color: white; background: var(--sidebar-hover); }
+        .sidebar-nav li.active { background: var(--sidebar-hover); color: white; border-left: 4px solid var(--primary); }
+        .main { margin-left: 260px; flex: 1; padding: 30px; }
+        .header-content { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Table Styles */
+        .table-container { background: white; padding: 25px; border-radius: 15px; box-shadow: var(--card-shadow); }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 15px; font-weight: 600; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; vertical-align: middle; }
+        tr:hover { background-color: #f8fafc; }
+        
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #818cf8, #c084fc); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; color: white; }
+        .author-info { display: flex; align-items: center; gap: 10px; }
+        .btn-action { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; font-size: 14px; transition: 0.2s; border: none; cursor: pointer; }
+        .btn-view { background: #e0e7ff; color: #4f46e5; }
+        .btn-view:hover { background: #c7d2fe; }
+        .btn-delete { background: #fee2e2; color: #ef4444; }
+        .btn-delete:hover { background: #fecaca; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .badge-like { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .badge-comment { background: rgba(14,165,233,0.1); color: #0ea5e9; }
+        .post-title { font-weight: 600; color: #0f172a; max-width: 300px; display: block; overflow-wrap: break-word; word-wrap: break-word; white-space: normal; }
+    </style>
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" height="35" style="filter: brightness(0) invert(1);">
+        <span>ADMIN</span>
+    </div>
+    <ul class="sidebar-nav">
+        <a th:href="@{/admin/dashboard}" style="text-decoration: none;"><li><i class="fas fa-chart-line"></i> Dashboard</li></a>
+        <a th:href="@{/admin/accounts}" style="text-decoration: none;"><li><i class="fas fa-users"></i> Quản lý tài khoản</li></a>
+        <a th:href="@{/admin/blogs}" style="text-decoration: none;"><li class="active"><i class="fas fa-blog"></i> Quản lý bài đăng</li></a>
+        <a th:href="@{/admin/manager_movie}" style="text-decoration: none;"><li><i class="fas fa-film"></i> Quản lý phim</li></a>
+        <a th:href="@{/admin/manager_schedule}" style="text-decoration: none;"><li><i class="fas fa-calendar-alt"></i> Lịch chiếu</li></a>
+        <a th:href="@{/admin/manager_ticket_price}" style="text-decoration: none;"><li><i class="fas fa-tags"></i> Giá Vé & Loại Vé</li></a>
+        <a th:href="@{/admin/manager_combo}" style="text-decoration: none;"><li><i class="fas fa-utensils"></i> Quản lý Combo</li></a>
+        <a th:href="@{/admin/manager_cinema}" style="text-decoration: none;"><li><i class="fas fa-theater-masks"></i> Rạp & Phòng</li></a>
+    </ul>
+</aside>
+
+<main class="main">
+    <div class="header-content">
+        <div>
+            <h1>Quản lý bài đăng cộng đồng</h1>
+            <p style="color: #64748b; margin-top: -10px;">Kiểm duyệt và quản lý các bài viết trên Beta Community.</p>
+        </div>
+        <a th:href="@{/blog}" target="_blank" style="background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;"><i class="fas fa-external-link-alt"></i> Xem Blog public</a>
+    </div>
+
+    <!-- Thông báo lỗi/thành công từ redirect (thừa kế từ redirectAttributes) -->
+    <div th:if="${success}" style="background: #dcfce7; color: #15803d; padding: 14px 20px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; font-weight: 600;">
+        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" style="background: #fee2e2; color: #b91c1c; padding: 14px 20px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; font-weight: 600;">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+            <tr>
+                <th style="width: 50px;">ID</th>
+                <th style="width: 300px;">Bài viết</th>
+                <th>Người đăng</th>
+                <th style="text-align: center;">Tương tác</th>
+                <th>Thời gian</th>
+                <th style="text-align: center;">Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${posts.empty}">
+                <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">Chưa có bài viết nào trong hệ thống.</td>
+            </tr>
+            <tr th:each="p : ${posts}">
+                <td style="font-weight: 700; color: #94a3b8;" th:text="'#' + ${p.id}"></td>
+                <td>
+                    <span class="post-title" th:text="${p.title}"></span>
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;" th:text="${#strings.length(p.content) > 50 ? #strings.substring(p.content,0,50) + '...' : p.content}"></div>
+                </td>
+                <td>
+                    <div class="author-info">
+                        <div class="avatar" th:text="${#strings.substring(p.author.name, 0, 1)}"></div>
+                        <div>
+                            <div style="font-weight: 600;" th:text="${p.author.name}"></div>
+                            <div style="font-size: 12px; color: #64748b;" th:text="${p.author.role}"></div>
+                        </div>
+                    </div>
+                </td>
+                <td style="text-align: center;">
+                    <span class="badge badge-like"><i class="fas fa-heart"></i> <span th:text="${p.likeCount}"></span></span>
+                    <span class="badge badge-comment" style="margin-left: 5px;"><i class="fas fa-comment"></i> <span th:text="${p.commentCount}"></span></span>
+                </td>
+                <td th:text="${#temporals.format(p.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                <td style="text-align: center;">
+                    <a th:href="@{/blog/{id}(id=${p.id})}" target="_blank" class="btn-action btn-view" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                    <form th:action="@{/blog/{id}/delete(id=${p.id})}" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa bài viết này khỏi hệ thống? (Thao tác này áp dụng ngay lập tức)')">
+                        <button type="submit" class="btn-action btn-delete" title="Xóa bài"><i class="fas fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

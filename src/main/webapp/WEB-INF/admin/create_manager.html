@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Beta Cinemas | Create New Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --primary: #0054a6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            display: flex;
+            color: #1e293b;
+        }
+
+        /* Sidebar - Đồng bộ 100% với hệ thống Admin */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            height: 100vh;
+            color: #f8fafc;
+            position: fixed;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            font-size: 20px;
+            font-weight: 800;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 15px 0;
+            margin: 0;
+        }
+
+        .sidebar-nav a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .sidebar-nav li {
+            padding: 12px 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+            transition: 0.2s;
+        }
+
+        .sidebar-nav li:hover {
+            color: white;
+            background: var(--sidebar-hover);
+        }
+
+        .main {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        /* Form Card Style */
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header-content {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--primary);
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #475569;
+            text-transform: uppercase;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: 0.2s;
+            background: #f8fafc;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 84, 166, 0.1);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 1px solid #fecaca;
+            font-size: 14px;
+        }
+
+        .form-actions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #e2e8f0;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-submit {
+            flex: 2;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 84, 166, 0.3);
+        }
+
+        .btn-cancel {
+            flex: 1;
+            background: #f1f5f9;
+            color: #475569;
+            text-decoration: none;
+            text-align: center;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="https://inansangtao.com/wp-content/uploads/2021/08/logo-beta-cineplex.png" height="35"
+             style="filter: brightness(0) invert(1);">
+        <span>ADMIN</span>
+    </div>
+    <ul class="sidebar-nav">
+        <a th:href="@{/admin/dashboard}" style="text-decoration: none;">
+            <li><i class="fas fa-chart-line"></i> Dashboard</li>
+        </a>
+        <a th:href="@{/admin/accounts}" style="text-decoration: none;">
+            <li class="active"><i class="fas fa-users"></i> Quản lý tài khoản</li>
+        </a>
+        <a th:href="@{/admin/manager_movie}" style="text-decoration: none;">
+            <li><i class="fas fa-film"></i> Quản lý phim</li>
+        </a>
+        <a th:href="@{/admin/manager_schedule}" style="text-decoration: none;">
+            <li><i class="fas fa-calendar-alt"></i> Lịch chiếu</li>
+        </a>
+        <a th:href="@{/admin/manager_ticket_price}" style="text-decoration: none;">
+            <li><i class="fas fa-tags"></i> Giá Vé & Loại Vé</li>
+        </a>
+        <a th:href="@{/admin/manager_combo}" style="text-decoration: none;">
+            <li><i class="fas fa-utensils"></i> Quản lý Combo</li>
+        </a>
+        <a th:href="@{/admin/manager_cinema}" style="text-decoration: none;">
+            <li><i class="fas fa-theater-masks"></i> Rạp & Phòng</li>
+        </a>
+        <a th:href="@{/admin/manager_news}" style="text-decoration: none;">
+            <li><i class="fas fa-newspaper"></i> Quản lý tin tức</li>
+        </a>
+        <a th:href="@{/admin/manager_vouchers}" style="text-decoration: none;">
+            <li><i class="fas fa-ticket-alt"></i> Quản lý Voucher</li>
+        </a>
+        <a th:href="@{/profile}" style="text-decoration: none;">
+            <li><i class="fas fa-user-circle"></i> Thông tin cá nhân</li>
+        </a>
+        <a th:href="@{/logout}" style="text-decoration: none;">
+            <li><i class="fas fa-sign-out-alt"></i> Đăng xuất</li>
+        </a>
+    </ul>
+</aside>
+
+<main class="main">
+    <div class="form-container">
+        <div class="header-content">
+            <div>
+                <h1 style="margin: 0;">Tạo tài khoản Manager</h1>
+                <p style="color: #64748b; margin-top: 5px;">Cấp quyền quản lý hệ thống cho nhân viên mới.</p>
+            </div>
+            <a th:href="@{/admin/accounts}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+
+        <div class="alert-danger" th:if="${errorMessage}">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="form-card">
+            <form th:action="@{/admin/create-manager}" th:object="${account}" method="post">
+                <div class="form-grid">
+
+                    <div class="form-group full-width">
+                        <label>Họ và tên nhân viên (*)</label>
+                        <input type="text" th:field="*{name}" class="form-input" placeholder="Nhập đầy đủ họ tên..."
+                               required />
+                        <span class="error-msg" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email đăng nhập (*)</label>
+                        <input type="email" th:field="*{email}" class="form-input"
+                               placeholder="manager@betacinemas.vn" required />
+                        <span class="error-msg" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mật khẩu tạm thời (*)</label>
+                        <input type="password" th:field="*{password}" class="form-input" required />
+                        <span class="error-msg" th:if="${#fields.hasErrors('password')}"
+                              th:errors="*{password}"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số điện thoại (*)</label>
+                        <input type="text" th:field="*{phoneNum}" class="form-input" placeholder="09xxxxxxxx"
+                               required />
+                        <span class="error-msg" th:if="${#fields.hasErrors('phoneNum')}"
+                              th:errors="*{phoneNum}"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tuổi</label>
+                        <input type="number" th:field="*{age}" class="form-input" min="18" />
+                        <span class="error-msg" th:if="${#fields.hasErrors('age')}" th:errors="*{age}"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Giới tính</label>
+                        <select th:field="*{gender}" class="form-input">
+                            <option value="Male">Nam</option>
+                            <option value="Female">Nữ</option>
+                            <option value="Other">Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Địa chỉ</label>
+                        <input type="text" th:field="*{address}" class="form-input"
+                               placeholder="Xã/Phường, Quận/Huyện..." />
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-user-check"></i> Xác nhận tạo Manager
+                    </button>
+                    <a th:href="@{/admin/accounts}" class="btn-cancel">Hủy bỏ</a>
+                </div>
+            </form>
+        </div>
+
+        <div
+                style="margin-top: 20px; padding: 20px; background: #fffbeb; border-radius: 10px; border: 1px solid #fef3c7;">
+            <p style="margin: 0; color: #92400e; font-size: 13px; font-weight: 600;">
+                <i class="fas fa-info-circle"></i> Lưu ý: Tài khoản Manager sau khi tạo sẽ có quyền quản lý Phim,
+                Lịch chiếu và Combo. Mật khẩu nên được yêu cầu thay đổi sau lần đăng nhập đầu tiên.
+            </p>
+        </div>
+    </div>
+</main>
+
+</body>
+
+</html>

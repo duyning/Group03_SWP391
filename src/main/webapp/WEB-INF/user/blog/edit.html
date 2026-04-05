@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chỉnh sửa bài viết - Beta Community</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: #fdfdfd; min-height: 100vh; color: #333; display: flex; flex-direction: column; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+.card { margin-top: 50px; flex-shrink: 0; margin-bottom: 50px; margin-left: auto; margin-right: auto;}
+        
+        .card { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border-radius: 24px; padding: 42px 48px; width: 100%; max-width: 680px; }
+        h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 28px; }
+        h1 span { background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        input[type="text"], textarea { width: 100%; background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; padding: 14px 16px; border-radius: 12px; font-size: 1rem; outline: none; transition: all 0.3s; font-family: 'Inter', sans-serif; resize: vertical; }
+        input[type="text"]:focus, textarea:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129,140,248,0.2); background: rgba(15,23,42,0.8); }
+        input[type="text"]::placeholder, textarea::placeholder { color: rgba(148,163,184,0.5); }
+        textarea { min-height: 200px; line-height: 1.7; }
+        .char-count { font-size: 0.78rem; color: #64748b; text-align: right; margin-top: 4px; }
+        .actions { display: flex; gap: 12px; margin-top: 28px; }
+        .btn-submit { flex: 1; padding: 14px; background: #4F46E5; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { background: #4338CA; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79,70,229,0.5); }
+        .btn-cancel { padding: 14px 24px; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; transition: 0.2s; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.12); color: #0f172a; }
+    
+        /* HEADER/FOOTER CSS */
+        .top-bar { background: #0054a6; color: white; padding: 8px 0; font-size: 13px; }
+        .top-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: flex-end; padding: 0 15px; }
+        .top-link { color: white; text-decoration: none; margin-left: 10px; }
+        .header-main { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        .header-container { max-width: 1300px; margin: 0 auto; display: flex; align-items: center; padding: 0 15px; }
+        .logo { height: 55px; margin-right: 25px; }
+        .nav-menu { display: flex; justify-content: center; flex-grow: 1; gap: 25px; }
+        .nav-menu a { text-decoration: none; color: #333; font-weight: 700; font-size: 16px; }
+        .footer { background: #0054a6; color: white; padding: 50px 0; margin-top: auto; width: 100%; }
+        .footer-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 50px; padding: 0 15px; }
+        .main-content-wrapper { display: flex; justify-content: center; align-items: flex-start; }
+
+</style>
+</head>
+<body>
+<div class="top-bar">
+    <div class="top-container">
+        <th:block th:if="${account == null}">
+            <a th:href="@{/login}" class="top-link">Đăng nhập</a>
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+            <a th:href="@{/register}" class="top-link">Đăng ký</a>
+        </th:block>
+        <th:block th:if="${account != null}">
+            <span style="color: white; font-size: 13px;">Xin chào, </span>
+            <a th:href="@{/profile}" class="top-link" th:text="${account.name}" style="margin-left: 5px; font-weight: bold;">Tên User</a>
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+            <a th:href="@{/logout}" class="top-link">Đăng xuất</a>
+        </th:block>
+        <img src="https://flagcdn.com/w40/gb.png" class="lang-icon" alt="English" style="margin-left: 15px;">
+    </div>
+</div>
+<header class="header-main">
+    <div class="header-container">
+        <a th:href="@{/home}"><img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" class="logo"></a>
+        <nav class="nav-menu">
+            <a th:href="@{/home}">LỊCH CHIẾU THEO RẠP</a>
+            <a th:href="@{/home}">PHIM</a>
+            <a th:href="@{/home}">RẠP</a>
+            <a th:href="@{/home}">GIÁ VÉ</a>
+            <a th:href="@{/user/vouchers}">KHO VOUCHER</a>
+            <a th:href="@{/blog}" style="color: #0054a6;">TIN TỨC</a>
+        </nav>
+    </div>
+</header>
+<div class="main-content-wrapper" style="flex: 1; padding: 40px 20px; width: 100%; display: flex; justify-content: center;">
+<div style="width: 100%; max-width: 800px;">
+
+<div class="card">
+    <h1>✍️ Sửa <span>bài viết</span></h1>
+    <form th:action="@{/blog/{id}/edit(id=${post.id})}" method="POST">
+        <div class="form-group">
+            <label for="title">Tiêu đề bài viết</label>
+            <input type="text" id="title" name="title" th:value="${post.title}" placeholder="Nhập tiêu đề hấp dẫn..." required maxlength="200" oninput="updateCount(this, 'titleCount', 200)">
+            <div class="char-count"><span id="titleCount" th:text="${#strings.length(post.title)}">0</span>/200</div>
+        </div>
+        <div class="form-group">
+            <label for="content">Nội dung</label>
+            <textarea id="content" name="content" placeholder="Chia sẻ suy nghĩ của bạn về bộ phim, diễn viên, hay điện ảnh nói chung..." required oninput="updateCount(this, 'contentCount', 5000)" maxlength="5000" th:text="${post.content}"></textarea>
+            <div class="char-count"><span id="contentCount" th:text="${#strings.length(post.content)}">0</span>/5000</div>
+        </div>
+        <div class="actions">
+            <a class="btn-cancel" th:href="@{/blog/{id}(id=${post.id})}">← Hủy</a>
+            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Lưu Thay Đổi</button>
+        </div>
+    </form>
+</div>
+</div></div>
+<footer class="footer">
+    <div class="footer-container">
+        <div>
+            <h4>BETA CINEMAS</h4>
+            <p>Hệ thống rạp chiếu phim hàng đầu cho giới trẻ.</p>
+        </div>
+        <div>
+            <h4>LIÊN HỆ</h4>
+            <p>Hotline: 1900 636807</p>
+        </div>
+        <div>
+            <h4>KẾT NỐI</h4>
+            <p>Facebook | Youtube | TikTok</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    function updateCount(el, id, max) {
+        document.getElementById(id).textContent = el.value.length;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch sử đặt vé | Beta Cinemas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary:      #0054a6;
+            --primary-dark: #003d7a;
+            --primary-light:#e8f1fb;
+            --bg:           #f0f4f9;
+            --white:        #ffffff;
+            --text:         #1e293b;
+            --muted:        #64748b;
+            --border:       #e2e8f0;
+            --success:      #10b981;
+            --radius-card:  20px;
+            --shadow-card:  0 4px 20px rgba(0,84,166,0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* Topbar */
+        .top-bar {
+            background: var(--primary);
+            color: white;
+            padding: 9px 0;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .top-bar .inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Header*/
+        .header {
+            background: var(--white);
+            padding: 12px 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            position: sticky; top: 0; z-index: 900;
+        }
+        .header .inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { height: 40px; }
+        .nav a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .nav a:hover { color: var(--primary); }
+
+        /*Page layout */
+        .page {
+            max-width: 960px;
+            margin: 44px auto;
+            padding: 0 20px;
+        }
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+        .btn-back {
+            width: 40px; height: 40px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--muted);
+            text-decoration: none;
+            transition: .3s;
+        }
+        .btn-back:hover { background: var(--primary); color: white; transform: translateX(-3px); }
+        .page-title h2 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -.5px;
+        }
+
+        /*Booking list */
+        .list { display: flex; flex-direction: column; gap: 18px; }
+
+        /* Booking CARD (giao diện gọn)*/
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+            transition: transform .35s cubic-bezier(.4,0,.2,1), box-shadow .35s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 32px rgba(0,84,166,0.12);
+            border-color: var(--primary);
+        }
+
+        /* poster */
+        .card-poster {
+            width: 110px;
+            flex-shrink: 0;
+        }
+        .card-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* middle info */
+        .card-info {
+            flex: 1;
+            padding: 22px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+        }
+        .card-movie-name {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0;
+            line-height: 1.3;
+        }
+        .card-meta {
+            font-size: 13px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .card-meta i { color: var(--primary); width: 14px; }
+        .badge-paid {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #dcfce7;
+            color: #065f46;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 99px;
+            margin-top: 4px;
+            width: fit-content;
+        }
+
+        /* right price + button */
+        .card-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 14px;
+            padding: 22px 24px;
+            border-left: 1px dashed var(--border);
+            min-width: 180px;
+        }
+        .price-label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+        .price-amount {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--primary);
+            line-height: 1;
+        }
+        .btn-detail {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: background .25s, transform .2s;
+            white-space: nowrap;
+        }
+        .btn-detail:hover { background: var(--primary-dark); transform: scale(1.04); }
+
+        /* Empty state */
+        .empty {
+            text-align: center;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 80px 40px;
+        }
+        .empty i { font-size: 44px; color: var(--primary); margin-bottom: 16px; }
+        .empty p { color: var(--muted); margin-bottom: 22px; }
+        .btn-go {
+            background: var(--primary);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* MODAL (popup chi tiết vé) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--white);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 640px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: popIn .3s cubic-bezier(.34,1.56,.64,1) both;
+        }
+        @keyframes popIn {
+            from { opacity:0; transform: scale(.88) translateY(20px); }
+            to   { opacity:1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 18px;
+            background: var(--bg);
+            border: none;
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--muted);
+            display: flex; align-items: center; justify-content: center;
+            transition: .2s;
+        }
+        .modal-close:hover { background: #fde8e8; color: #dc2626; }
+
+        /* modal header */
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a7fe8 100%);
+            padding: 28px 28px 24px;
+            border-radius: 24px 24px 0 0;
+            color: white;
+            display: flex;
+            gap: 20px;
+        }
+        .modal-header img {
+            width: 90px;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid rgba(255,255,255,.3);
+            flex-shrink: 0;
+        }
+        .modal-header-info { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+        .modal-movie-name {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.3;
+        }
+        .modal-sub {
+            font-size: 13px;
+            opacity: .85;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* modal body */
+        .modal-body { padding: 26px 28px; }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 20px;
+            margin-bottom: 22px;
+        }
+        .detail-item label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--muted);
+            letter-spacing: .6px;
+            margin-bottom: 3px;
+        }
+        .detail-item span {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .detail-item.full { grid-column: 1 / -1; }
+
+        .divider { border: none; border-top: 1px dashed var(--border); margin: 18px 0; }
+
+        /* QR section */
+        .qr-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 22px;
+            background: var(--bg);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+        .qr-section h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .qr-section p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+        .qr-canvas {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 6px solid white;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .modal-total {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0 4px;
+        }
+        .modal-total span { font-size: 15px; font-weight: 700; color: var(--text); }
+        .modal-total .amount {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .card { flex-direction: column; }
+            .card-poster { width: 100%; height: 200px; }
+            .card-right { border-left: none; border-top: 1px dashed var(--border); align-items: flex-start; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .modal-header { flex-direction: column; align-items: center; text-align: center; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Topbar -->
+    <div class="top-bar">
+        <div class="inner">
+            <span><i class="far fa-user-circle"></i> Xin chào, <b th:text="${account?.name ?: 'Khách'}">User</b></span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="inner">
+            <a th:href="@{/home}">
+                <img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" class="logo" alt="Beta Cinemas">
+            </a>
+            <nav class="nav">
+                <a th:href="@{/home}">Trang chủ</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="page">
+        <div class="page-title">
+            <a th:href="@{/profile}" class="btn-back"><i class="fas fa-chevron-left"></i></a>
+            <h2><i class="fas fa-ticket-alt" style="margin-right:10px; font-size:22px;"></i>Vé đã đặt</h2>
+        </div>
+
+        <!-- Danh sách -->
+        <div class="list">
+
+            <!--Mỗi booking: 1 card GỌI-->
+            <div th:each="b : ${bookings}" class="card">
+
+                <!-- Poster -->
+                <div class="card-poster">
+                    <img th:src="@{'/' + ${b.showtime.movie.imgUrl}}"
+                         th:alt="${b.showtime.movie.movieName}"
+                         onerror="this.src='https://via.placeholder.com/110x165?text=No+Image'">
+                </div>
+
+                <!-- Thông tin tóm tắt -->
+                <div class="card-info">
+                    <h3 class="card-movie-name" th:text="${b.showtime.movie.movieName}">Tên Phim</h3>
+                    <div class="card-meta">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span th:text="${#temporals.format(b.bookingDate, 'dd/MM/yyyy HH:mm')}">01/01/2025 20:00</span>
+                    </div>
+                    <div class="card-meta">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span th:text="${b.showtime.room.cinema.cinemaName}">Beta Cinema</span>
+                    </div>
+                    <span class="badge-paid"><i class="fas fa-check-circle"></i> Đã thanh toán</span>
+                </div>
+
+                <!-- Giá + Nút -->
+                <div class="card-right">
+                    <div>
+                        <div class="price-label">Tổng thanh toán</div>
+                        <div class="price-amount"
+                             th:text="${#numbers.formatDecimal(b.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                            296.000 đ
+                        </div>
+                    </div>
+                    <!-- Nút mở modal -->
+                    <button class="btn-detail"
+                            th:onclick="'openModal(' + ${b.id} + ')'">
+                        <i class="fas fa-qrcode"></i> Chi tiết vé
+                    </button>
+                </div>
+
+            </div>
+            <!--end th:each-->
+
+            <!-- Khi không có booking nào -->
+            <div th:if="${#lists.isEmpty(bookings)}" class="empty">
+                <i class="fas fa-film"></i>
+                <p>Bạn chưa có lịch sử đặt vé nào!</p>
+                <a th:href="@{/home}" class="btn-go">Đặt vé ngay</a>
+            </div>
+
+        </div>
+    </main>
+
+    <!--MODAL CHI TIẾT VÉ mỗi booking 1 modal-->
+    <div th:each="b : ${bookings}"
+         th:id="'modal_' + ${b.id}"
+         class="modal-overlay"
+         th:onclick="'closeModalOutside(event,' + ${b.id} + ')'">
+
+        <div class="modal-box">
+
+            <!-- Nút đóng -->
+            <button class="modal-close" th:onclick="'closeModal(' + ${b.id} + ')'">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <img th:src="@{'/' + ${b.showtime.movie.imgUrl}}"
+                     th:alt="${b.showtime.movie.movieName}"
+                     onerror="this.src='https://via.placeholder.com/90x130?text=No+Image'">
+                <div class="modal-header-info">
+                    <p class="modal-movie-name" th:text="${b.showtime.movie.movieName}">Tên Phim</p>
+                    <div class="modal-sub"><i class="fas fa-film"></i> <span th:text="${b.showtime.movie.type}">Thể loại</span></div>
+                    <div class="modal-sub"><i class="fas fa-clock"></i> <span th:text="${b.showtime.movie.duration}">120 phút</span></div>
+                    <div class="modal-sub"><i class="fas fa-language"></i> <span th:text="${b.showtime.movie.language}">Tiếng Việt</span></div>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+
+                <!-- Chi tiết buổi chiếu -->
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label><i class="fas fa-map-marker-alt"></i> Rạp chiếu</label>
+                        <span th:text="${b.showtime.room.cinema.cinemaName}">Beta Cinema</span>
+                    </div>
+                    <div class="detail-item">
+                        <label><i class="fas fa-door-open"></i> Phòng chiếu</label>
+                        <span th:text="${b.showtime.room.roomName + ' (' + b.showtime.room.roomType + ')'}">Phòng 01</span>
+                    </div>
+                    <div class="detail-item">
+                        <label><i class="fas fa-calendar-alt"></i> Ngày chiếu</label>
+                        <span th:text="${#temporals.format(b.showtime.startDate, 'EEEE, dd/MM/yyyy')}">Thứ 7, 01/01/2025</span>
+                    </div>
+                    <div class="detail-item">
+                        <label><i class="fas fa-clock"></i> Suất chiếu</label>
+                        <span th:text="${#temporals.format(b.showtime.startTime, 'HH:mm') + ' – ' + #temporals.format(b.showtime.endTime, 'HH:mm')}">20:00 – 22:00</span>
+                    </div>
+                    <div class="detail-item full">
+                        <label><i class="fas fa-chair"></i> Ghế ngồi</label>
+                        <span th:text="${b.seatNumbers}" style="color:var(--primary); font-size:15px;">A1, A2</span>
+                    </div>
+                    <div class="detail-item" th:if="${b.comboDetails != null and !b.comboDetails.isEmpty()}">
+                        <label><i class="fas fa-utensils"></i> Combo</label>
+                        <span th:text="${b.comboDetails}">1x Sweet Combo</span>
+                    </div>
+                    <div class="detail-item">
+                        <label><i class="fas fa-hashtag"></i> Mã booking</label>
+                        <span th:text="'#BK' + ${b.id}" style="font-family:monospace;">#BK123</span>
+                    </div>
+                    <div class="detail-item">
+                        <label><i class="fas fa-calendar-check"></i> Ngày đặt</label>
+                        <span th:text="${#temporals.format(b.bookingDate, 'dd/MM/yyyy HH:mm')}">01/01/2025 19:45</span>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <!-- QR Code section -->
+                <div class="qr-section">
+                    <h4><i class="fas fa-qrcode" style="color:var(--primary);"></i> Mã QR Vào Rạp</h4>
+                    <!-- Chuẩn bị nội dung QR lưu vào data-info, sẽ được JS gọi API tạo ảnh thật khi mở modal -->
+                    <img class="qr-canvas" th:id="'qrimg_' + ${b.id}"
+                         src=""
+                         th:data-info="${'VÉ ĐIỆN TỬ - BETA CINEMAS&#10;Mã Đặt Vé: #' + b.id + '&#10;Khách hàng: ' + (b.account != null ? b.account.name : 'Khách') + '&#10;Phim: ' + b.showtime.movie.movieName + '&#10;Rạp: ' + b.showtime.room.cinema.cinemaName + ' - Ph: ' + b.showtime.room.roomName + '&#10;Thời gian: ' + #temporals.format(b.showtime.startTime,'HH:mm') + ' ngày ' + #temporals.format(b.showtime.startDate,'dd/MM/yyyy') + '&#10;Ghế: ' + (b.seatNumbers != null ? b.seatNumbers : 'N/A')}"
+                         alt="Mã QR vé điện tử"
+                         style="width:180px; height:180px; border-radius:12px; border:6px solid white; box-shadow:0 4px 16px rgba(0,0,0,0.12);">
+                    <p>Xuất trình hoặc quét mã QR này để xem nhanh thông tin vé của bạn.</p>
+                </div>
+
+                <hr class="divider">
+
+                <!-- Tổng tiền -->
+                <div class="modal-total">
+                    <span>Tổng thanh toán</span>
+                    <span class="amount"
+                          th:text="${#numbers.formatDecimal(b.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                        296.000 đ
+                    </span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- end th:each modals -->
+
+
+    <!--Scripts-->
+    <script>
+        function openModal(id) {
+            const overlay = document.getElementById('modal_' + id);
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Lazy-load tạo QR code API - Giúp chống nghẽn đường truyền và cho phép quét ra đầy đủ tiếng Việt
+            const img = document.getElementById('qrimg_' + id);
+            if (!img.getAttribute('src')) {
+                const info = img.getAttribute('data-info');
+                // Mã hóa chuỗi tiếng Việt thành chuẩn URL
+                const safeUrlData = encodeURIComponent(info);
+                img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&color=0054a6&bgcolor=ffffff&qzone=1&data=' + safeUrlData;
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById('modal_' + id).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function closeModalOutside(event, id) {
+            if (event.target === document.getElementById('modal_' + id)) {
+                closeModal(id);
+            }
+        }
+    </script>
+
+</body>
+</html>

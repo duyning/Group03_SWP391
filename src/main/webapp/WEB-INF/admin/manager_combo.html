@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Combo | Beta Cinemas Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- GIỮ NGUYÊN STYLE GỐC (Dùng chung) --- */
+        :root {
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --primary: #0054a6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            display: flex;
+            color: #1e293b;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            height: 100vh;
+            color: #f8fafc;
+            position: fixed;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            font-size: 20px;
+            font-weight: 800;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 15px 0;
+            margin: 0;
+        }
+
+        .sidebar-nav li {
+            padding: 12px 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+            transition: 0.2s;
+        }
+
+        .sidebar-nav li.active {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .main {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-reset {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        /* TABLE STYLE */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Price Tags & Image */
+        .price-tag {
+            font-weight: 700;
+            color: #166534;
+            background: #dcfce7;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .combo-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        /* Status Toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--success);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            width: 550px;
+            border-radius: 12px;
+            overflow: hidden;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 25px 30px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .swal2-container {
+            z-index: 10000 !important;
+        }
+
+        .swal2-popup {
+            font-family: 'Inter', sans-serif !important;
+            border-radius: 15px !important;
+        }
+        /* Search Filter Section */
+        .table-filter {
+            padding: 25px;
+            background: #ffffff;
+            border-bottom: 1px solid #edf2f7;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+        }
+
+        .filter-input {
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            background-color: #f8fafc;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .filter-input:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+        }
+
+        .search-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            padding-top: 15px;
+            border-top: 1px dashed #e2e8f0;
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="https://inansangtao.com/wp-content/uploads/2021/08/logo-beta-cineplex.png" height="35"
+             style="filter: brightness(0) invert(1);">
+        <span>ADMIN</span>
+    </div>
+    <ul class="sidebar-nav">
+        <a th:href="@{/admin/dashboard}" style="text-decoration: none;">
+            <li><i class="fas fa-chart-line"></i> Dashboard</li>
+        </a>
+        <a th:href="@{/admin/accounts}" style="text-decoration: none;"><li><i class="fas fa-users"></i> Quản lý tài khoản</li></a>
+        <a th:href="@{/admin/manager_movie}" style="text-decoration: none;">
+            <li><i class="fas fa-film"></i> Quản lý phim</li>
+        </a>
+        <a th:href="@{/admin/manager_schedule}" style="text-decoration: none;">
+            <li><i class="fas fa-calendar-alt"></i> Lịch chiếu</li>
+        </a>
+        <a th:href="@{/admin/manager_ticket_price}" style="text-decoration: none;">
+            <li><i class="fas fa-tags"></i> Giá Vé & Loại Vé</li>
+        </a>
+        <a th:href="@{/admin/manager_combo}" style="text-decoration: none;">
+            <li class="active"><i class="fas fa-utensils"></i> Quản lý Combo</li>
+        </a>
+        <a th:href="@{/admin/manager_cinema}" style="text-decoration: none;">
+            <li><i class="fas fa-theater-masks"></i> Rạp & Phòng</li>
+        </a>
+        <a th:href="@{/admin/manager_news}" style="text-decoration: none;">
+            <li><i class="fas fa-newspaper"></i> Quản lý tin tức</li>
+        </a>
+        <a th:href="@{/admin/manager_vouchers}" style="text-decoration: none;">
+            <li><i class="fas fa-ticket-alt"></i> Quản lý Voucher</li>
+        </a>
+        <a th:href="@{/profile}" style="text-decoration: none;">
+            <li><i class="fas fa-user-circle"></i> Thông tin cá nhân</li>
+        </a>
+        <a th:href="@{/logout}" style="text-decoration: none;">
+            <li><i class="fas fa-sign-out-alt"></i> Đăng xuất</li>
+        </a>
+    </ul>
+</aside>
+
+<main class="main">
+    <div class="header-content">
+        <div>
+            <h1 style="margin: 0;">Danh sách Combo bắp nước</h1>
+            <p style="color: #64748b; margin: 5px 0 0;">Quản lý các gói combo bán tại quầy</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('add')">
+            <i class="fas fa-plus"></i> Thêm Combo mới
+        </button>
+    </div>
+
+    <div class="table-container">
+        <form th:action="@{/admin/combo/search}" method="GET" class="table-filter">
+            <div class="filter-group">
+                <label>Tên Combo</label>
+                <input type="text" name="name" th:value="${searchName}" class="filter-input" placeholder="Ví dụ: Beta Combo...">
+            </div>
+
+            <div class="filter-group">
+                <label>Mô tả chi tiết</label>
+                <input type="text" name="description" th:value="${searchDescription}" class="filter-input" placeholder="Ví dụ: Bắp ngọt, nước có ga...">
+            </div>
+
+            <div class="filter-group">
+                <label>Mức giá tối đa (VNĐ)</label>
+                <input type="number" name="maxPrice" th:value="${searchMaxPrice}" class="filter-input" placeholder="Ví dụ: 100000">
+            </div>
+
+            <div class="filter-group">
+                <label>Trạng thái</label>
+                <select name="status" class="filter-input">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="1" th:selected="${searchStatus == '1'}">🟢 Đang hoạt động</option>
+                    <option value="0" th:selected="${searchStatus == '0'}">🔴 Tạm ngưng</option>
+                </select>
+            </div>
+
+            <div class="search-actions">
+                <span style="margin-right: auto; color: #94a3b8; font-size: 13px;">
+                    Tìm thấy <strong th:text="${combos != null ? combos.size() : 0}" style="color: var(--primary)">0</strong> kết quả
+                </span>
+                <a th:href="@{/admin/manager_combo}" class="btn btn-reset">Làm mới</a>
+                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            </div>
+        </form>
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>COMBO</th> <th>MÔ TẢ CHI TIẾT</th>
+                <th>GIÁ BÁN</th>
+                <th>TRẠNG THÁI</th>
+                <th style="text-align: right;">HÀNH ĐỘNG</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c, stat : ${combos}">
+                <td th:text="${stat.count}">1</td>
+                <td>
+                    <div class="movie-info">
+                        <img th:src="@{'/' + ${c.imageUrl}}"
+                             class="combo-img"
+                             alt="Combo"
+                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;"
+                             onerror="this.src='https://placehold.co/60x60?text=No+Img'">
+
+                        <div class="movie-name-container">
+                            <div class="movie-name" th:text="${c.comboName}" style="font-size: 15px;">Tên Combo</div>
+                        </div>
+                    </div>
+                </td>
+
+                <td style="color: #64748b; font-size: 13px; max-width: 250px; line-height: 1.5;" th:text="${c.description}">
+                    1 Bắp (Ngọt/Mặn) + 2 Nước ngọt (Vừa)
+                </td>
+
+                <td>
+                    <span class="price-tag"
+                          th:text="${#numbers.formatDecimal(c.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                        75.000 đ
+                    </span>
+                </td>
+
+                <td>
+                    <label class="switch">
+                        <input type="checkbox" th:checked="${c.active}" th:data-id="${c.id}" onchange="toggleStatus(this)">
+                        <span class="slider"></span>
+                    </label>
+                </td>
+
+                <td style="text-align: right;">
+                    <button class="btn btn-warning" style="padding: 6px 10px;"
+                            th:onclick="openModal('edit',
+        [[${c.id}]],
+        [[${c.comboName}]],
+        [[${c.description}]],
+        [[${c.price}]],
+        [[${c.imageUrl != null ? c.imageUrl : ''}]])"> <i class="fas fa-pen"></i>
+                    </button>
+
+                    <button class="btn btn-danger" style="padding: 6px 10px; margin-left: 5px;"
+                            th:onclick="'deleteCombo(' + ${c.id} + ')'">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(combos)}">
+                <td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <i class="fas fa-box-open" style="font-size: 40px; margin-bottom: 10px; display: block;"></i>
+                    Chưa có dữ liệu Combo nào
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div class="modal-overlay" id="comboModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: var(--primary);" id="modalTitle">Thêm Combo mới</h3>
+            <button onclick="closeModal()"
+                    style="background:none; border:none; font-size: 20px; cursor: pointer;">&times;</button>
+        </div>
+        <form id="comboForm">
+            <input type="hidden" id="comboId" name="id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tên Combo (*)</label>
+                    <input type="text" id="comboName" class="form-input" placeholder="Ví dụ: Beta Combo..."
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mô tả chi tiết (*)</label>
+                    <textarea id="description" class="form-input" rows="3" placeholder="Ví dụ: 1 Bắp + 2 Nước..."
+                              required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Giá bán (VNĐ) (*)</label>
+                    <input type="number" id="price" class="form-input" placeholder="75000" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Hình ảnh Combo</label>
+                    <input type="file" id="imageFile" class="form-input" accept="image/*"
+                           onchange="previewImage(this)">
+
+                    <div style="margin-top: 10px; text-align: center;">
+                        <img id="preview" src=""
+                             style="max-height: 150px; border-radius: 8px; display: none; border: 1px solid #ddd;">
+                        <input type="hidden" id="currentImageUrl">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-reset" onclick="closeModal()">Hủy</button>
+                <button type="submit" class="btn btn-primary" id="btnSave">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const CONTEXT_PATH = '[[@{/}]]'.replace(/\/$/, '');
+    // --- XEM TRƯỚC ẢNH ---
+    function previewImage(input) {
+        const preview = document.getElementById('preview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // --- MỞ MODAL ---
+    function openModal(mode, id = null, name = '', desc = '', price = '', img = '') {
+        const modal = document.getElementById('comboModal');
+        const title = document.getElementById('modalTitle');
+        const btn = document.getElementById('btnSave');
+        const preview = document.getElementById('preview');
+
+        if (mode === 'add') {
+            title.innerText = "Thêm Combo mới";
+            btn.innerText = "Tạo mới";
+            document.getElementById('comboForm').reset();
+            document.getElementById('comboId').value = '';
+            document.getElementById('currentImageUrl').value = '';
+
+            preview.style.display = 'none';
+            preview.src = '';
+        } else {
+            title.innerText = "Cập nhật Combo";
+            btn.innerText = "Cập nhật";
+
+            // Fill data
+            document.getElementById('comboId').value = id;
+            document.getElementById('comboName').value = name;
+            document.getElementById('description').value = desc;
+            document.getElementById('price').value = price;
+            document.getElementById('currentImageUrl').value = img;
+
+            // --- SỬA LOGIC HIỂN THỊ ẢNH ---
+            if (img && img.trim() !== '') {
+                let finalSrc = img.startsWith('/') ? img : '/' + img;
+                preview.src = CONTEXT_PATH + finalSrc;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('comboModal').style.display = 'none';
+    }
+
+    // --- XỬ LÝ SUBMIT FORM (Dùng FormData để gửi file) ---
+    document.getElementById('comboForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = document.getElementById('comboId').value;
+        const url = id ? '/admin/combo/update' : '/admin/combo/add';
+
+        // Tạo FormData
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('comboName', document.getElementById('comboName').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('price', document.getElementById('price').value);
+
+        // Xử lý file ảnh
+        const fileInput = document.getElementById('imageFile');
+        if (fileInput.files.length > 0) {
+            formData.append('imageFile', fileInput.files[0]); // Gửi file mới
+        } else {
+            // Nếu không chọn file mới, gửi lại link ảnh cũ (quan trọng cho update)
+            formData.append('imageUrl', document.getElementById('currentImageUrl').value);
+        }
+
+        submitDataMultipart(url, formData);
+    });
+
+    // --- XÓA COMBO ---
+    function deleteCombo(id) {
+        Swal.fire({
+            title: 'Xóa Combo này?',
+            text: "Dữ liệu sẽ bị xóa vĩnh viễn.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Xóa ngay'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Xóa thì chỉ cần gửi ID dạng JSON là đủ
+                const baseUrl = '[[@{/}]]'.replace(/\/$/, "");
+                fetch(baseUrl + '/admin/combo/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                })
+                    .then(res => res.json())
+                    .then(d => {
+                        if (d.success) {
+                            Swal.fire('Thành công', d.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi', d.message, 'error');
+                        }
+                    });
+            }
+        })
+    }
+
+    // --- HÀM GỬI DATA CÓ FILE (Multipart) ---
+    function submitDataMultipart(url, formData) {
+        const baseUrl = '[[@{/}]]'.replace(/\/$/, "");
+        fetch(baseUrl + url, {
+            method: 'POST',
+            // Lưu ý: KHÔNG được set Content-Type thủ công khi dùng FormData
+            // Browser sẽ tự động set boundary
+            body: formData
+        })
+            .then(res => res.json())
+            .then(d => {
+                if (d.success) {
+                    closeModal();
+                    Swal.fire('Thành công', d.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Lỗi', d.message, 'error');
+                }
+            })
+            .catch(e => {
+                console.error(e);
+                Swal.fire('Lỗi', 'Không thể kết nối server', 'error');
+            });
+    }
+
+    // --- TOGGLE TRẠNG THÁI (Switch) ---
+    function toggleStatus(checkbox) {
+        const id = checkbox.getAttribute('data-id');
+        const isActive = checkbox.checked;
+
+        const baseUrl = '[[@{/}]]'.replace(/\/$/, "");
+        fetch(baseUrl + '/admin/combo/update-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, active: isActive })
+        })
+            .then(res => res.json())
+            .then(d => {
+                if (d.success) {
+                    const Toast = Swal.mixin({
+                        toast: true, position: 'top-end', showConfirmButton: false, timer: 1500
+                    });
+                    Toast.fire({ icon: 'success', title: 'Đã cập nhật trạng thái' });
+                } else {
+                    Swal.fire('Lỗi', d.message, 'error');
+                    checkbox.checked = !isActive;
+                }
+            })
+            .catch(e => {
+                console.error(e);
+                checkbox.checked = !isActive;
+            });
+    }
+</script>
+
+</body>
+
+</html>
