@@ -182,4 +182,51 @@ public class ScheduleController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
+
+    /**
+     * 5. API Tạo xuất chiếu tự động hàng loạt
+     */
+    @PostMapping("/api/auto-add-bulk")
+    @ResponseBody
+    public ResponseEntity<?> autoAddBulk(@RequestBody Map<String, Object> payload) {
+        try {
+            System.out.println("Auto Add Bulk Payload: " + payload);
+
+            if (payload.get("roomId") == null || payload.get("movieId") == null) {
+                throw new Exception("Thiếu thông tin phòng hoặc phim!");
+            }
+
+            int roomId = Integer.parseInt(payload.get("roomId").toString());
+            int movieId = Integer.parseInt(payload.get("movieId").toString());
+
+            CinemaRoom room = roomService.getRoomById(roomId);
+            Movie movie = movieService.getMovieById(movieId);
+
+            if (room == null || movie == null) {
+                throw new Exception("Phòng chiếu hoặc Phim không hợp lệ!");
+            }
+
+            LocalDate startDate = LocalDate.parse(payload.get("startDate").toString());
+            LocalDate endDate = LocalDate.parse(payload.get("endDate").toString());
+            LocalTime startTime = LocalTime.parse(payload.get("startTime").toString());
+            LocalTime endTimeLimit = LocalTime.parse(payload.get("endTimeLimit").toString());
+            int gapMinutes = Integer.parseInt(payload.get("gapMinutes").toString());
+
+            if (endDate.isBefore(startDate)) {
+                throw new Exception("Ngày kết thúc không được nhỏ hơn ngày bắt đầu!");
+            }
+
+            int addedCount = showtimeService.autoGenerateShowtimes(
+                room, movie, startDate, endDate, startTime, endTimeLimit, gapMinutes
+            );
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đã tạo thành công " + addedCount + " suất chiếu mới!"
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
 }

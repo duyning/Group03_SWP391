@@ -64,4 +64,31 @@ public class MovieService {
         // Gọi xuống Repository để đếm tổng số phim
         return movieRepository.countAll();
     }
+
+    @Autowired
+    private example.repository.ShowtimeRepository showtimeRepository;
+
+    @Transactional(readOnly = true)
+    public List<Movie> searchMoviesByTimeRange(Integer cinemaId, java.time.LocalDate date, String timeRange) {
+        java.time.LocalTime startTime = null;
+        java.time.LocalTime endTime = null;
+
+        if (timeRange != null) {
+            switch (timeRange.toLowerCase()) {
+                case "morning":
+                    startTime = java.time.LocalTime.of(8, 0);
+                    endTime = java.time.LocalTime.of(12, 0);
+                    break;
+                case "afternoon":
+                    startTime = java.time.LocalTime.of(12, 0);
+                    endTime = java.time.LocalTime.of(18, 0);
+                    break;
+                case "evening":
+                    startTime = java.time.LocalTime.of(18, 0);
+                    endTime = java.time.LocalTime.of(23, 59, 59);
+                    break;
+            }
+        }
+        return showtimeRepository.findMoviesByFilters(cinemaId, date, startTime, endTime);
+    }
 }

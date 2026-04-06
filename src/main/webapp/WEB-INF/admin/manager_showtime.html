@@ -541,9 +541,14 @@
                 <h1 style="margin: 0;">Quản lý lịch chiếu phim</h1>
                 <p style="color: #64748b; margin: 5px 0 0;">Sắp xếp suất chiếu cho từng rạp và phòng</p>
             </div>
-            <button type="button" class="btn btn-primary" onclick="openAddModal()">
-                <i class="fas fa-plus"></i> Tạo suất chiếu mới
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn btn-warning" onclick="openAutoAddModal()">
+                    <i class="fas fa-magic"></i> Tự động xếp lịch
+                </button>
+                <button type="button" class="btn btn-primary" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i> Tạo suất chiếu mới
+                </button>
+            </div>
         </div>
 
         <div class="stats-grid">
@@ -707,6 +712,69 @@
         </div>
     </div>
 
+    <!-- Modal Tự động xếp lịch -->
+    <div class="modal-overlay" id="autoAddShowtimeModal">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h3 style="margin: 0; color: #f59e0b;"><i class="fas fa-magic"></i> Tự động lặp suất chiếu</h3>
+                <button onclick="closeModal('autoAddShowtimeModal')"
+                    style="background:none; border:none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <form id="autoAddShowtimeForm">
+                <input type="hidden" id="autoAddCinemaId" th:value="${selectedCinemaId}">
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="filter-group" style="margin-bottom: 15px;">
+                        <label>Rạp đang chọn</label>
+                        <input type="text" class="filter-input" th:value="${selectedCinemaName}" disabled
+                            style="background: #f1f5f9; color: #64748b;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div class="filter-group" style="flex: 1;">
+                            <label>Chọn Phòng Chiếu (*)</label>
+                            <select id="autoAddRoomId" class="filter-input" required>
+                                <option th:each="r : ${rooms}" th:value="${r.id}"
+                                    th:text="${r.roomName} + ' (' + ${r.roomType} + ')'"></option>
+                            </select>
+                        </div>
+                        <div class="filter-group" style="flex: 1;">
+                            <label>Chọn Phim (*)</label>
+                            <select id="autoAddMovieId" class="filter-input" required>
+                                <option value="" disabled selected>-- Chọn Phim --</option>
+                                <optgroup label="PHIM ĐANG CHIẾU" th:if="${not #lists.isEmpty(moviesDangChieu)}">
+                                    <option th:each="m : ${moviesDangChieu}" th:value="${m.id}" th:text="${m.movieName}"></option>
+                                </optgroup>
+                                <optgroup label="PHIM SẮP CHIẾU" th:if="${not #lists.isEmpty(moviesSapChieu)}">
+                                    <option th:each="m : ${moviesSapChieu}" th:value="${m.id}" th:text="${m.movieName}"></option>
+                                </optgroup>
+                                <optgroup label="SUẤT CHIẾU ĐẶC BIỆT" th:if="${not #lists.isEmpty(moviesDacBiet)}">
+                                    <option th:each="m : ${moviesDacBiet}" th:value="${m.id}" th:text="${m.movieName}"></option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 15px;">
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div class="filter-group"><label>Từ ngày</label><input type="date" id="autoStartDate" class="filter-input" th:value="${selectedDate}" required></div>
+                            <div class="filter-group"><label>Đến ngày</label><input type="date" id="autoEndDate" class="filter-input" th:value="${selectedDate}" required></div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div class="filter-group"><label>Suất đầu tiên bắt đầu từ</label><input type="time" id="autoStartTime" class="filter-input" value="08:00" required></div>
+                            <div class="filter-group"><label>Lặp tới trước giờ này</label><input type="time" id="autoEndTimeLimit" class="filter-input" value="23:30" required></div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-reset" onclick="closeModal('autoAddShowtimeModal')">Hủy</button>
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-play"></i> Bắt đầu xếp lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="editShowtimeModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -789,6 +857,10 @@
             document.getElementById('addShowtimeModal').style.display = 'flex';
         }
 
+        function openAutoAddModal() {
+            document.getElementById('autoAddShowtimeModal').style.display = 'flex';
+        }
+
         function openEditModal(element) {
             const id = element.getAttribute('data-id');
             const room = element.getAttribute('data-room');
@@ -816,6 +888,21 @@
         }
 
         // --- XỬ LÝ SỰ KIỆN FORM ---
+        document.getElementById('autoAddShowtimeForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            
+            submitData('/admin/manager_schedule/api/auto-add-bulk', {
+                cinemaId: document.getElementById('autoAddCinemaId').value,
+                roomId: document.getElementById('autoAddRoomId').value,
+                movieId: document.getElementById('autoAddMovieId').value,
+                startDate: document.getElementById('autoStartDate').value,
+                endDate: document.getElementById('autoEndDate').value,
+                startTime: document.getElementById('autoStartTime').value,
+                endTimeLimit: document.getElementById('autoEndTimeLimit').value,
+                gapMinutes: 15 // Mặc định 15 phút dọn rạp
+            });
+        });
+
         document.getElementById('addShowtimeForm').addEventListener('submit', function (e) {
             e.preventDefault();
             submitData('/admin/manager_schedule/api/add', {
@@ -881,6 +968,7 @@
                         // 1. ĐÓNG MODAL TRƯỚC (Để màn hình thoáng)
                         closeModal('addShowtimeModal');
                         closeModal('editShowtimeModal');
+                        closeModal('autoAddShowtimeModal');
 
                         // 2. HIỆN SWEETALERT
                         Swal.fire({

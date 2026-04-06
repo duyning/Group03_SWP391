@@ -82,4 +82,18 @@ public class BookingRestController {
             return ResponseEntity.badRequest().body("Lỗi lấy dữ liệu ghế: " + e.getMessage());
         }
     }
+
+    // API 3: Lấy danh sách phim kèm suất chiếu theo rạp và ngày
+    @GetMapping("/movies-with-showtimes")
+    public ResponseEntity<?> getMoviesWithShowtimes(
+            @RequestParam int cinemaId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        try {
+            List<Map<String, Object>> result = showtimeService.getMoviesWithShowtimes(cinemaId, date);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Lỗi lấy lịch chiếu: " + e.getMessage());
+        }
+    }
 }

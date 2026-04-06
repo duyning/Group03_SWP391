@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beta Cinemas | Lịch chiếu theo rạp</title>
+    <!-- Use standard fonts and styles like home.html -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fdfdfd;
+        }
+
+        .top-bar { background: #0054a6; color: white; padding: 8px 0; font-size: 13px; }
+        .top-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: flex-end; align-items: center; padding: 0 15px; }
+        .top-link { color: white; text-decoration: none; margin-left: 10px; }
+        .top-link:hover { text-decoration: underline; }
+        .lang-icon { height: 14px; margin-left: 15px; cursor: pointer; }
+
+        .header-main { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        .header-container { max-width: 1300px; margin: 0 auto; display: flex; align-items: center; padding: 0 15px; }
+        .logo { height: 55px; margin-right: 25px; }
+
+        .nav-menu { display: flex; justify-content: center; flex-grow: 1; gap: 25px; }
+        .nav-menu a { text-decoration: none; color: #333; font-weight: 700; font-size: 16px; transition: color 0.2s; white-space: nowrap; }
+        .nav-menu a:hover, .nav-menu a.active { color: #0054a6; }
+
+        /* Main Showtimes Section */
+        .showtimes-page-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        .cinema-select-container {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .cinema-select-container select {
+            padding: 12px 30px 12px 20px;
+            border-radius: 10px;
+            border: 2px solid #0054a6;
+            font-size: 20px;
+            font-weight: bold;
+            color: #0054a6;
+            appearance: none;
+            background: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%230054a6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 15px center;
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0, 84, 166, 0.1);
+        }
+
+        /* Vùng Lọc Tìm Kiếm Nội Bộ */
+        .search-filter-container {
+            margin-bottom: 30px;
+        }
+
+        .search-filter-bar {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            gap: 20px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .search-item { flex: 1; }
+        
+        .search-box-input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .search-box-input:focus { border-color: #0054a6; }
+
+        .search-select-input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 15px;
+            color: #333;
+            outline: none;
+            box-sizing: border-box;
+            background: white;
+            cursor: pointer;
+        }
+        .search-select-input:focus { border-color: #0054a6; }
+
+        /* Tabs ngày mượn css từ modal booking */
+        .page-date-picker {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .page-date-item {
+            min-width: 80px; height: 95px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .page-date-item strong { font-size: 30px; color: #1e293b; margin-bottom: 2px; line-height: 1; }
+        .page-date-item span { font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+        .page-date-item:hover { border-color: #0054a6; transform: translateY(-3px); }
+        .page-date-item.active {
+            background: #0054a6;
+            border-color: #0054a6;
+            box-shadow: 0 10px 15px -3px rgba(0, 84, 166, 0.4);
+            transform: scale(1.05);
+        }
+        .page-date-item.active strong, .page-date-item.active span { color: white; }
+
+        /* Danh sách phim */
+        .movie-showtime-list {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .movie-showtime-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 25px;
+            align-items: flex-start;
+            border: 1px solid #f0f0f0;
+        }
+
+        .m-poster img {
+            width: 180px;
+            height: 270px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .m-details {
+            flex: 1;
+        }
+
+        .m-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0054a6;
+            margin: 0 0 10px 0;
+            text-transform: capitalize;
+        }
+
+        .m-meta {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .m-meta span { display: flex; align-items: center; gap: 5px; }
+        .m-label { background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-weight: 600; color: #334155;}
+
+        .format-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .showtimes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .showtime-item {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .showtime-item:hover {
+            border-color: #0054a6;
+            background: #eff6ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 84, 166, 0.15);
+        }
+        .showtime-item .time {
+            font-size: 18px; font-weight: 800;
+            color: #1e293b; display: block;
+        }
+        .showtime-item .seats {
+            font-size: 12px; color: #64748b;
+            margin-top: 4px; display: block;
+            font-weight: 600;
+        }
+        .late-show { background: #fff1f2; border-color: #fda4af; }
+        .late-show .time { color: #be123c; }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            background: white;
+            border-radius: 20px;
+            color: #94a3b8;
+            border: 2px dashed #e2e8f0;
+        }
+        
+        .footer { background: #0054a6; color: white; padding: 50px 0; margin-top: 50px; }
+        .footer-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 50px; padding: 0 15px; }
+
+        /* Responsive */
+        @media(max-width: 768px) {
+            .movie-showtime-card { flex-direction: column; align-items: center; text-align: center; }
+            .m-poster img { width: 100%; max-width: 200px; height: auto; }
+            .m-meta { justify-content: center; flex-wrap: wrap; }
+            .cinema-select-container select { font-size: 16px; }
+            .page-date-item { min-width: 65px; height: 80px; }
+            .page-date-item strong { font-size: 22px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="top-bar">
+    <div class="top-container">
+        <th:block th:if="${account == null}">
+            <a th:href="@{/login}" class="top-link">Đăng nhập</a>
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+            <a th:href="@{/register}" class="top-link">Đăng ký</a>
+        </th:block>
+        <th:block th:if="${account != null}">
+            <span style="color: white; font-size: 13px;">Xin chào, </span>
+            <a th:href="@{/profile}" class="top-link" th:text="${account.name}" style="margin-left: 5px; font-weight: bold;">Tên User</a>
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+            <a th:href="@{/logout}" class="top-link">Đăng xuất</a>
+        </th:block>
+        <img src="https://flagcdn.com/w40/gb.png" class="lang-icon" alt="English" style="margin-left: 15px;">
+    </div>
+</div>
+
+<header class="header-main">
+    <div class="header-container">
+        <a th:href="@{/home}"><img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" alt="Beta Cinemas" class="logo"></a>
+        <nav class="nav-menu">
+            <a th:href="@{/lich-chieu}" class="active" style="color: #0054a6">LỊCH CHIẾU THEO RẠP</a>
+            <a th:href="@{/movies}">PHIM</a>
+            <a href="#">RẠP</a>
+            <a href="#">GIÁ VÉ</a>
+            <a th:href="@{/user/vouchers}">KHO VOUCHER</a>
+            <a th:href="@{/user/news}">TIN TỨC</a>
+            <a th:href="@{/blog}">CỘNG ĐỒNG</a>
+        </nav>
+    </div>
+</header>
+
+<div class="showtimes-page-container">
+    <div class="cinema-select-container">
+        <select id="mainCinemaSelect" onchange="fetchShowtimes()">
+            <th:block th:each="c : ${cinemas}">
+                <option th:value="${c.id}" th:text="${c.cinemaName}"></option>
+            </th:block>
+        </select>
+    </div>
+
+    <div class="page-date-picker" id="datePickerContainer">
+        <!-- Rendered by JS -->
+    </div>
+
+    <!-- Vùng Lọc Hiển Thị Theo Tên / Khung giờ -->
+    <div class="search-filter-container">
+        <div class="search-filter-bar">
+            <div class="search-item" style="flex: 2;">
+                <input type="text" id="filterMovieName" class="search-box-input" placeholder="Tìm tên phim (Ví dụ: Godzilla, Trấn Thành...)" oninput="applyFiltersAndRender()">
+            </div>
+            <div class="search-item">
+                <select id="filterTimeRange" class="search-select-input" onchange="applyFiltersAndRender()">
+                    <option value="all">Tất cả suất chiếu</option>
+                    <option value="morning">Buổi sáng (08:00 - 12:00)</option>
+                    <option value="afternoon">Buổi chiều (12:00 - 18:00)</option>
+                    <option value="evening">Buổi tối (18:00 - 24:00)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="movie-showtime-list" id="movieListContainer">
+        <!-- Rendered by JS -->
+        <div class="empty-state">
+            <i class="fas fa-film" style="font-size: 50px; margin-bottom: 15px; opacity: 0.3;"></i>
+            <h3>Đang tải dữ liệu...</h3>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="footer-container">
+        <div><h4>BETA CINEMAS</h4><p>Hệ thống rạp chiếu phim hàng đầu cho giới trẻ.</p></div>
+        <div><h4>LIÊN HỆ</h4><p>Hotline: 1900 636807</p></div>
+        <div><h4>KẾT NỐI</h4><p>Facebook | Youtube | TikTok</p></div>
+    </div>
+</footer>
+
+<script th:inline="javascript">
+    let selectedDateStr = "";
+    let allMoviesList = []; // Dữ liệu cache gốc do API trả về
+
+    document.addEventListener("DOMContentLoaded", function() {
+        renderDateTabs();
+        // Lấy rạp đầu tiên mặc định
+        const select = document.getElementById("mainCinemaSelect");
+        if(select && select.options.length > 0) {
+            select.selectedIndex = 0; 
+        }
+        fetchShowtimes(); // Gọi lần đầu
+    });
+
+    function renderDateTabs() {
+        const container = document.getElementById("datePickerContainer");
+        container.innerHTML = "";
+        
+        const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        
+        let today = new Date();
+        
+        for (let i = 0; i < 7; i++) {
+            let targetDate = new Date(today);
+            targetDate.setDate(today.getDate() + i);
+            
+            let dd = String(targetDate.getDate()).padStart(2, '0');
+            let mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+            let dateVal = `${targetDate.getFullYear()}-${mm}-${dd}`;
+            
+            let displayDay = days[targetDate.getDay()];
+            let displayDate = `${dd}/${mm}`;
+
+            let div = document.createElement("div");
+            div.className = "page-date-item";
+            // Chọn ngày hôm nay làm mặc định
+            if (i === 0) {
+                div.classList.add("active");
+                selectedDateStr = dateVal;
+            }
+
+            div.innerHTML = `<strong>${dd}</strong><span>${mm} - ${displayDay}</span>`;
+            
+            div.onclick = function() {
+                // Xoá active cũ
+                document.querySelectorAll(".page-date-item").forEach(el => el.classList.remove("active"));
+                this.classList.add("active");
+                selectedDateStr = dateVal;
+                fetchShowtimes();
+            };
+            
+            container.appendChild(div);
+        }
+    }
+
+    function fetchShowtimes() {
+        const cinemaId = document.getElementById("mainCinemaSelect").value;
+        const container = document.getElementById("movieListContainer");
+        
+        if (!cinemaId || !selectedDateStr) return;
+
+        container.innerHTML = `<div class="empty-state">
+            <i class="fas fa-spinner fa-spin" style="font-size: 50px; margin-bottom: 15px; color: #0054a6;"></i>
+            <h3>Đang tải suất chiếu...</h3>
+        </div>`;
+
+        const apiUrl = /*[[@{/api/booking/movies-with-showtimes}]]*/ '/api/booking/movies-with-showtimes';
+
+        fetch(`${apiUrl}?cinemaId=${cinemaId}&date=${selectedDateStr}`)
+            .then(res => {
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return res.json();
+            })
+            .then(data => {
+                allMoviesList = data; // Lưu lại dữ liệu gốc
+                applyFiltersAndRender();
+            })
+            .catch(err => {
+                console.error(err);
+                container.innerHTML = `<div class="empty-state" style="color: #e11d48; border-color: #fda4af;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 50px; margin-bottom: 15px;"></i>
+                    <h3>Không thể tải dữ liệu!</h3>
+                </div>`;
+            });
+    }
+
+    function applyFiltersAndRender() {
+        const textQuery = document.getElementById("filterMovieName").value.toLowerCase().trim();
+        const timeRange = document.getElementById("filterTimeRange").value;
+
+        const filtered = [];
+
+        allMoviesList.forEach(m => {
+            // Lọc theo tên phim
+            if (textQuery && !m.movieName.toLowerCase().includes(textQuery)) {
+                return;
+            }
+
+            // Lọc các khung giờ
+            let validShowtimes = m.showtimes || [];
+            if (timeRange !== 'all') {
+                validShowtimes = validShowtimes.filter(st => {
+                    let hour = parseInt(st.time.split(':')[0]);
+                    if (timeRange === 'morning') return hour >= 0 && hour < 12;
+                    if (timeRange === 'afternoon') return hour >= 12 && hour < 18;
+                    if (timeRange === 'evening') return hour >= 18;
+                    return true;
+                });
+            }
+
+            // Nếu sau khi lọc khung giờ mà phim vẫn còn lịch chiếu thì mới hiển thị
+            if (validShowtimes.length > 0) {
+                // Tạo một object copy mới để không đè lên dữ liệu gốc
+                const clonedMovie = { ...m, showtimes: validShowtimes };
+                filtered.push(clonedMovie);
+            }
+        });
+
+        renderMovies(filtered);
+    }
+
+    function renderMovies(movies) {
+        const container = document.getElementById("movieListContainer");
+        container.innerHTML = "";
+
+        if (movies.length === 0) {
+            container.innerHTML = `<div class="empty-state">
+                <i class="fas fa-search" style="font-size: 50px; margin-bottom: 15px; opacity: 0.3;"></i>
+                <h3>Không tìm thấy xuất chiếu nào khớp với bộ lọc!</h3>
+                <p>Vui lòng xóa bộ lọc Tìm kiếm hoặc chọn một Rạp / Ngày khác.</p>
+            </div>`;
+            return;
+        }
+
+        let ctx = /*[[@{/}]]*/ '/';
+        if (!ctx.endsWith('/')) ctx += '/';
+        const detailUrl = /*[[@{/movie/detail/}]]*/ '/movie/detail/';
+
+        movies.forEach(item => {
+            // Khung card của một phim
+            const card = document.createElement("div");
+            card.className = "movie-showtime-card";
+
+            // Poster
+            const posterDiv = document.createElement("div");
+            posterDiv.className = "m-poster";
+            let cleanImgUrl = item.imgUrl ? (item.imgUrl.startsWith('/') ? item.imgUrl.substring(1) : item.imgUrl) : '';
+            let imgUrl = cleanImgUrl ? (ctx + cleanImgUrl) : 'https://via.placeholder.com/180x270';
+            posterDiv.innerHTML = `<a href="${detailUrl}${item.id}"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/180x270'"></a>`;
+            card.appendChild(posterDiv);
+
+            // Nội dung chi tiết
+            const detailsDiv = document.createElement("div");
+            detailsDiv.className = "m-details";
+            
+            let html = `<a href="${detailUrl}${item.id}" style="text-decoration: none;"><h3 class="m-title">${item.movieName}</h3></a>`;
+            html += `<div class="m-meta">
+                        <span><i class="fas fa-tags"></i> <span class="m-label">${item.type || 'Chưa cập nhật'}</span></span>
+                        <span><i class="far fa-clock"></i> <span class="m-label">${item.duration || '90 phút'}</span></span>
+                     </div>`;
+                     
+            html += `<div class="format-title">2D PHỤ ĐỀ</div>`;
+            
+            // Lưới suất chiếu
+            html += `<div class="showtimes-grid">`;
+            
+            if (item.showtimes && item.showtimes.length > 0) {
+                // Nhóm theo thời gian (sắp xếp tăng dần)
+                const sortedShowtimes = item.showtimes.sort((a,b) => a.time.localeCompare(b.time));
+                
+                sortedShowtimes.forEach(st => {
+                    let hour = parseInt(st.time.split(":")[0]);
+                    let isLate = hour >= 22;
+                    let lateClass = isLate ? "late-show" : "";
+                    
+                    html += `<div class="showtime-item ${lateClass}" onclick="openBookingProcess(${st.id})">
+                                <span class="time">${st.time}</span>
+                                <span class="seats">${st.seatsLeft} ghế trống</span>
+                             </div>`;
+                });
+            } else {
+                html += `<p style="color: #999; font-size: 14px;">(Không có suất chiếu)</p>`;
+            }
+            html += `</div>`; // end grid
+            
+            detailsDiv.innerHTML = html;
+            card.appendChild(detailsDiv);
+            container.appendChild(card);
+        });
+    }
+
+    function openBookingProcess(showtimeId) {
+        const bookUrl = /*[[@{/booking/seat}]]*/ '/booking/seat';
+        window.location.href = `${bookUrl}?showtimeId=${showtimeId}`;
+    }
+</script>
+</body>
+</html>

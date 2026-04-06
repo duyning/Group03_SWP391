@@ -50,6 +50,9 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/reset-password"),    // <-- THÊM MỚI
                                 new AntPathRequestMatcher("/vnpay/**"),          // <-- THÊM MỚI CHO VNPAY
                                 new AntPathRequestMatcher("/api/booking/showtimes"), // <-- Cho phép xem lịch chiếu không cần đăng nhập
+                                new AntPathRequestMatcher("/api/booking/movies-with-showtimes"), // <-- API mới
+                                new AntPathRequestMatcher("/api/search/**"),     // <-- Cho phép tìm kiếm phim
+                                new AntPathRequestMatcher("/lich-chieu"),        // <-- Trang lịch chiếu
                                 new AntPathRequestMatcher("/resources/**"),
                                 new AntPathRequestMatcher("/assets/**"),
                                 new AntPathRequestMatcher("/uploads/**"),

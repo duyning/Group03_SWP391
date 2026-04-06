@@ -62,6 +62,12 @@ public class HomeController {
         return "user/home";
     }
 
+    @GetMapping("/lich-chieu")
+    public String showShowtimesPage(Principal principal, Model model) {
+        prepareHomeData(principal, model);
+        return "user/lich-chieu";
+    }
+
     @GetMapping("/movies")
     public String showMoviesPage(Principal principal, Model model) {
         prepareHomeData(principal, model);
