@@ -162,7 +162,7 @@ public class BookingController {
         }
         String username = principal.getName();
 
-        // Dùng username này tìm Account trong DB
+        // Dùng username này để tìm Account trong DB
         Account user = accountService.findByEmail(username);
 
         List<Booking> history = bookingRepository.findByAccountId(user.getAccountID());

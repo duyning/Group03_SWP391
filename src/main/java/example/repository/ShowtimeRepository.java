@@ -53,7 +53,7 @@ public class ShowtimeRepository {
         if (cinemaId != null) {
             query.setParameter("cinemaId", cinemaId);
         }
-        return query.setMaxResults(14).list(); // Giới hạn lấy tối đa 14 ngày tới
+        return query.setMaxResults(14).list(); // Giới hạn lấy tối đa 14 ngày
     }
 
     public Showtime findFirstAvailableShowtime(int movieId, Integer cinemaId, LocalDate currentDate, LocalTime currentTime) {

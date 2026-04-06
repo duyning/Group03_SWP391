@@ -70,7 +70,7 @@ public class AccountServiceImpl implements AccountService {
         java.util.Set<example.entity.Voucher> availableVouchers = new java.util.HashSet<>(user.getMyVouchers());
         availableVouchers.removeAll(user.getUsedVouchers());
 
-        // Lọc bỏ Voucher hết hạn hoặc bị khoá (không active)
+        // Lọc bỏ Voucher hết hạn hoặc bị khoá
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         List<example.entity.Voucher> validVouchers = availableVouchers.stream()
                 .filter(v -> v.getExpiryDate() != null && !v.getExpiryDate().isBefore(now))

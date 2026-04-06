@@ -158,7 +158,7 @@ public class HomeController {
         List<Integer> activeMovieIds = showtimeService.getActiveMovieIds(cinemaId);
         model.addAttribute("activeMovieIds", activeMovieIds);
 
-        // 2. Lọc theo Rạp (Cinema)
+        // 2. Lọc theo Rạp
         if (cinemaId != null) {
             filterListByAllowedIds(dangChieu, activeMovieIds);
             filterListByAllowedIds(sapChieu, activeMovieIds);

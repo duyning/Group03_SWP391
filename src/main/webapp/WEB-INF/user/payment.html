@@ -220,7 +220,7 @@
         const discount = (originalAmount * percent) / 100;
         const final = originalAmount - discount;
 
-        // Cập nhật giao diện nút Bấm
+        // Cập nhật giao diện nút
         document.getElementById('btnVoucherTrigger').style.background = '#059669'; // Chuyển màu xanh lá mạ
         document.getElementById('selectedVoucherName').innerHTML = `<i class="fas fa-check-circle" style="margin-right: 8px;"></i> ${code} (-${percent}%)`;
         document.getElementById('btnCancelVoucher').style.display = 'block';

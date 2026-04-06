@@ -92,7 +92,7 @@ public class BookingRestController {
     }
 
     // API 2: Lấy sơ đồ ghế cho một suất chiếu cụ thể
-    // URL ví dụ: /api/booking/seat-map/123
+    // URL ví dụ: /api/booking/seat-map/12
     @GetMapping("/seat-map/{showtimeId}")
     public ResponseEntity<?> getSeatMap(@PathVariable int showtimeId) {
         try {

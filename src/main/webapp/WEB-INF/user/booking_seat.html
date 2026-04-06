@@ -474,7 +474,7 @@
             }
 
             // CHUẨN HÓA DỮ LIỆU
-            // Đảm bảo dù API trả về rowName hay row thì vẫn lấy được
+            // Đảm bảo dù API trả về rowName hay row thì vẫn lấy
             const normalizedSeats = data.map(s => {
                 // Lấy row: ưu tiên row -> rowName -> cắt từ code (vd A1 -> A)
                 let r = s.row || s.rowName;

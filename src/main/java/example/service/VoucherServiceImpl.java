@@ -51,7 +51,7 @@ public class VoucherServiceImpl implements VoucherService {
                     throw new RuntimeException("Mã Voucher này đã được sử dụng bởi một voucher khác!");
                 }
 
-                // BƯỚC 5: LOGIC MỚI - Nếu thay đổi ngày hết hạn, gỡ bỏ liên kết với mọi Account
+                // BƯỚC 5: Nếu thay đổi ngày hết hạn, gỡ bỏ liên kết với mọi Account
                 // Điều này giúp tránh việc voucher cũ tự động "hồi sinh" trong ví khách hàng
                 if (existingVoucher.getExpiryDate() != null &&
                         !existingVoucher.getExpiryDate().isEqual(voucher.getExpiryDate())) {
