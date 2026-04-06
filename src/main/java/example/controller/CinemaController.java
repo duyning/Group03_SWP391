@@ -72,16 +72,8 @@ public class CinemaController {
 
     @GetMapping("/cinema/delete")
     public String deleteCinema(@RequestParam("id") int id, RedirectAttributes ra) {
-        try {
-            boolean success = cinemaService.deleteCinema(id);
-            if (success) {
-                ra.addFlashAttribute("message", "Đã xóa rạp thành công!");
-            } else {
-                ra.addFlashAttribute("error", "Không thể xóa rạp này do hệ thống vẫn còn phòng chiếu trực thuộc.");
-            }
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", "Đã có lỗi xảy ra khi xóa rạp chiếu.");
-        }
+        cinemaService.deleteCinema(id);
+        ra.addFlashAttribute("message", "Đã xóa rạp thành công!");
         return "redirect:/admin/manager_cinema";
     }
 
