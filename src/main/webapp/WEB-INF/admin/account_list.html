@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Beta Cinemas | Admin Account Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --primary: #0054a6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            display: flex;
+            color: #1e293b;
+        }
+
+        /* Sidebar - Đồng bộ 100% */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            height: 100vh;
+            color: #f8fafc;
+            position: fixed;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            font-size: 20px;
+            font-weight: 800;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 15px 0;
+            margin: 0;
+        }
+
+        .sidebar-nav a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .sidebar-nav li {
+            padding: 12px 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+            transition: 0.2s;
+        }
+
+        .sidebar-nav li.active {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .main {
+            margin-left: 260px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        /* Table Card & Filter */
+        .table-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .table-filter {
+            padding: 20px 25px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        /* Badges & Status */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .role-admin {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .role-manager {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .role-customer {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-inactive {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        /* Buttons */
+        .btn-toggle {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-deactivate {
+            background: #fff1f2;
+            color: #e11d48;
+            border: 1px solid #fecdd3;
+        }
+
+        .btn-activate {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .btn-toggle:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border: 1px solid #bbf7d0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" height="35"
+             style="filter: brightness(0) invert(1);">
+        <span>ADMIN</span>
+    </div>
+    <ul class="sidebar-nav">
+        <a th:href="@{/admin/dashboard}" style="text-decoration: none;">
+            <li><i class="fas fa-chart-line"></i> Dashboard</li>
+        </a>
+        <a th:href="@{/admin/accounts}" style="text-decoration: none;">
+            <li class="active"><i class="fas fa-users"></i> Quản lý tài khoản</li>
+        </a>
+        <a th:href="@{/admin/blogs}" style="text-decoration: none;">
+            <li><i class="fas fa-blog"></i> Quản lý bài đăng</li>
+        </a>
+        <a th:href="@{/admin/manager_movie}" style="text-decoration: none;">
+            <li><i class="fas fa-film"></i> Quản lý phim</li>
+        </a>
+        <a th:href="@{/admin/manager_schedule}" style="text-decoration: none;">
+            <li><i class="fas fa-calendar-alt"></i> Lịch chiếu</li>
+        </a>
+        <a th:href="@{/admin/manager_ticket_price}" style="text-decoration: none;">
+            <li><i class="fas fa-tags"></i> Giá Vé & Loại Vé</li>
+        </a>
+        <a th:href="@{/admin/manager_combo}" style="text-decoration: none;">
+            <li><i class="fas fa-utensils"></i> Quản lý Combo</li>
+        </a>
+        <a th:href="@{/admin/manager_cinema}" style="text-decoration: none;">
+            <li><i class="fas fa-theater-masks"></i> Rạp & Phòng</li>
+        </a>
+        <a th:href="@{/admin/manager_news}" style="text-decoration: none;">
+            <li><i class="fas fa-newspaper"></i> Quản lý tin tức</li>
+        </a>
+        <a th:href="@{/admin/manager_vouchers}" style="text-decoration: none;">
+            <li><i class="fas fa-ticket-alt"></i> Quản lý Voucher</li>
+        </a>
+        <a th:href="@{/profile}" style="text-decoration: none;">
+            <li><i class="fas fa-user-circle"></i> Thông tin cá nhân</li>
+        </a>
+        <a th:href="@{/logout}" style="text-decoration: none;">
+            <li><i class="fas fa-sign-out-alt"></i> Đăng xuất</li>
+        </a>
+    </ul>
+</aside>
+
+<main class="main">
+    <div class="header-content">
+        <div>
+            <h1>Quản lý tài khoản</h1>
+            <p style="color: #64748b; margin-top: -10px;">Quản lý vai trò và trạng thái hoạt động của người dùng.
+            </p>
+        </div>
+        <a th:href="@{/admin/create-manager}" class="btn-toggle btn-activate"
+           style="padding: 10px 20px; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-user-plus"></i> Create New Manager
+        </a>
+    </div>
+
+    <div class="alert-error" th:if="${errorMessage}">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="alert-success" th:if="${successMessage}" id="successAlert">
+        <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+    </div>
+
+    <div class="table-card">
+        <div class="table-filter">
+                <span style="font-size: 14px; color: #64748b;">
+                    Tổng cộng: <strong th:text="${#lists.size(accounts)}" style="color: var(--primary);">0</strong> tài
+                    khoản
+                </span>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Người dùng</th>
+                <th>Mật khẩu</th>
+                <th>Liên hệ</th>
+                <th>Thông tin</th>
+                <th>Vai trò</th>
+                <th>Điểm / Hạng</th>
+                <th>Trạng thái</th>
+                <th style="text-align: right;">Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="acc : ${accounts}">
+                <td>
+                    <div style="font-weight: 700;" th:text="${acc.name}"></div>
+                    <div style="font-size: 12px; color: #64748b;" th:text="${acc.email}"></div>
+                </td>
+                <td>
+                    <code
+                            style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #64748b; font-size: 12px;"
+                            th:text="${acc.password}">******</code>
+                </td>
+                <td>
+                    <div th:text="${acc.phoneNum}"></div>
+                </td>
+                <td>
+                    <div th:text="${acc.age} + ' tuổi • ' + ${acc.gender}"></div>
+                </td>
+                <td>
+                            <span th:text="${acc.role}"
+                                  th:classappend="${acc.role.name() == 'ADMIN' ? 'role-admin' : (acc.role.name() == 'MANAGER' ? 'role-manager' : 'role-customer')}"
+                                  class="badge">
+                            </span>
+                </td>
+                <td>
+                    <div style="font-weight: 600;"><i class="fas fa-star" style="color: var(--warning)"></i>
+                        <span th:text="${acc.loyaltyPoint}"></span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--primary); font-weight: 700;"
+                         th:text="${acc.membershipLevel}"></div>
+                </td>
+                <td>
+                            <span th:text="${acc.status ? 'Đang hoạt động' : 'Đã khóa'}"
+                                  th:classappend="${acc.status ? 'status-active' : 'status-inactive'}" class="badge">
+                            </span>
+                </td>
+                <td style="text-align: right;">
+                    <form th:action="@{/admin/accounts/{id}/toggle-status(id=${acc.accountID})}" method="post">
+                        <button type="submit" th:classappend="${acc.status ? 'btn-deactivate' : 'btn-activate'}"
+                                class="btn-toggle" th:text="${acc.status ? 'Khóa tài khoản' : 'Kích hoạt'}">
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(accounts)}">
+                <td colspan="8" style="text-align:center; padding: 50px; color: #94a3b8;">
+                    <i class="fas fa-user-slash"
+                       style="font-size: 30px; display: block; margin-bottom: 10px;"></i>
+                    Không có tài khoản nào trong danh sách.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<script>
+    // Tự động ẩn thông báo thành công sau 3 giây
+    const successAlert = document.getElementById('successAlert');
+    if (successAlert) {
+        setTimeout(() => {
+            successAlert.style.transition = "opacity 0.5s ease";
+            successAlert.style.opacity = "0";
+            setTimeout(() => successAlert.remove(), 500);
+        }, 3000);
+    }
+</script>
+</body>
+
+</html>
