@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chọn ghế - Beta Cinemas</title>
+    <style>
+        /* --- CSS --- */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding-bottom: 100px;
+        }
+
+        .top-bar {
+            background: #0054a6;
+            color: white;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+
+        .top-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .header-main {
+            background: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+        }
+
+        .logo {
+            height: 55px;
+            margin-right: 25px;
+        }
+
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            flex-grow: 1;
+            gap: 25px;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .booking-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            padding: 0 15px;
+        }
+
+        /* CỘT TRÁI - SƠ ĐỒ GHẾ */
+        .seat-map-section {
+            background: white;
+            padding: 40px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .screen {
+            width: 60%;
+            height: 8px;
+            background: #0054a6;
+            margin: 0 auto 50px;
+            border-radius: 50% / 100% 100% 0 0;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0, 84, 166, 0.2);
+            margin-top: 40px
+        }
+
+        .screen::after {
+            content: "MÀN HÌNH";
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #999;
+            font-size: 12px;
+            letter-spacing: 3px;
+            font-weight: bold;
+        }
+
+        /* Lưới ghế dùng Grid Layout */
+        .seats-grid {
+            display: grid;
+            gap: 6px;
+            /* Khoảng cách giữa các ghế */
+            justify-content: center;
+            margin-bottom: 40px;
+            /* grid-template-columns sẽ được set bằng JS */
+        }
+
+        .seat {
+            width: 32px;
+            height: 32px;
+            /* Kích thước ghế vuông vức hơn */
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border-radius: 6px;
+            font-weight: 700;
+            position: relative;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+
+        .seat:hover {
+            transform: scale(1.1);
+        }
+
+        /* Màu ghế */
+        .seat.standard {
+            background: #fff;
+            border: 2px solid #ccc;
+            color: #555;
+        }
+
+        .seat.vip {
+            background: #dc2626;
+            border: 2px solid #dc2626;
+            color: white;
+        }
+
+        /* Đỏ */
+        .seat.double {
+            background: #db2777;
+            border: 2px solid #db2777;
+            color: white;
+        }
+
+        /* Hồng */
+
+        .seat.selected {
+            background: #0054a6 !important;
+            border-color: #0054a6 !important;
+            color: #fff !important;
+            z-index: 5;
+            transform: scale(1.1);
+        }
+
+        .seat.sold {
+            background: #e5e7eb !important;
+            border-color: #d1d5db !important;
+            color: #9ca3af !important;
+            cursor: not-allowed;
+        }
+
+        .seat.sold::after {
+            content: "X";
+            font-size: 14px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .movie-info-side {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .movie-info-side img {
+            width: 90px;
+            border-radius: 6px;
+            object-fit: cover;
+            aspect-ratio: 2/3;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-movie-title {
+            font-size: 16px;
+            margin: 0 0 5px 0;
+            color: #0054a6;
+            text-transform: uppercase;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .sidebar-divider {
+            border-top: 1px dashed #ddd;
+            margin: 15px 0;
+        }
+
+        .ticket-details {
+            font-size: 14px;
+            line-height: 2;
+            color: #333;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .highlight-blue {
+            color: #0054a6;
+            font-weight: 700;
+        }
+
+        .total-price {
+            color: #0054a6;
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .btn-continue-sidebar {
+            background: #0054a6;
+            color: white;
+            border: none;
+            padding: 14px 0;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+
+        .btn-continue-sidebar:hover {
+            background: #00448a;
+        }
+
+        .btn-continue-sidebar:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .location-box select {
+            padding: 8px 30px 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            color: #333;
+            appearance: none;
+            background: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center;
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+        }
+
+        #loadingSeats {
+            text-align: center;
+            color: #0054a6;
+            padding: 40px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+<div class="top-bar">
+    <div class="top-container">
+
+        <th:block th:if="${account == null}">
+            <a th:href="@{/login}" class="top-link">Đăng nhập</a>
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+            <a th:href="@{/register}" class="top-link">Đăng ký</a>
+        </th:block>
+
+        <th:block th:if="${account != null}">
+            <span style="color: white; font-size: 13px;">Xin chào, </span>
+
+            <a th:href="@{/profile}" class="top-link" th:text="${account.name}" style="margin-left: 5px; font-weight: bold;">Tên User</a>
+
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+
+            <a th:href="@{/logout}" class="top-link">Đăng xuất</a>
+        </th:block>
+
+        <img src="https://flagcdn.com/w40/gb.png" class="lang-icon" alt="English" style="margin-left: 15px;">
+    </div>
+</div>
+
+<header class="header-main">
+    <div class="header-container">
+        <a th:href="@{/home}"><img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" alt="Beta Cinemas" class="logo"></a>
+        <nav class="nav-menu">
+            <a th:href="@{/home}">LỊCH CHIẾU THEO RẠP</a>
+            <a th:href="@{/movies}">PHIM</a>
+            <a href="#">RẠP</a>
+            <a href="#">GIÁ VÉ</a>
+            <a th:href="@{/user/vouchers}">KHO VOUCHER</a>
+            <a th:href="@{/user/news}">TIN TỨC</a>
+            <a th:href="@{/blog}">CỘNG ĐỒNG</a>
+        </nav>
+    </div>
+</header>
+
+<div class="booking-container">
+    <div class="seat-map-section">
+        <div class="legend-container"
+             style="display: flex; justify-content: center; gap: 25px; font-size: 13px; color: #555;">
+            <div style="display:flex; align-items:center; gap:8px;"><span class="seat standard"
+                                                                          style="width:20px; height:20px;"></span>Ghế Thường</div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="seat vip"
+                                                                          style="width:20px; height:20px;"></span>Ghế VIP</div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="seat double"
+                                                                          style="width:40px; height:20px;"></span>Ghế Đôi</div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="seat sold"
+                                                                          style="width:20px; height:20px;"></span>Ghế Đã bán</div>
+            <div style="display:flex; align-items:center; gap:8px;"><span class="seat selected"
+                                                                          style="width:20px; height:20px;"></span>Ghế Đang chọn</div>
+        </div>
+        <div class="screen"></div>
+
+        <div id="loadingSeats">
+            <i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Đang tải sơ đồ ghế...
+        </div>
+
+        <div class="seats-grid" id="seatsGrid" style="display: none;"></div>
+    </div>
+
+    <div class="sidebar">
+        <div class="movie-info-side">
+            <img th:src="@{'/' + ${showtime.movie.imgUrl}}" alt="Poster"
+                 onerror="this.src='https://via.placeholder.com/90x135'">
+
+            <div class="movie-title-group">
+                <h2 class="sidebar-movie-title" th:text="${showtime.movie.movieName}">TÊN PHIM</h2>
+
+                <p style="font-size:13px; color:#666; margin:0 0 5px 0; font-weight:bold;"
+                   th:text="${showtime.room.roomType}">2D</p>
+
+                <p style="font-size:13px; color:#333; margin:2px 0;">
+                    <b>Thể loại:</b> <span th:text="${showtime.movie.type}">Hành động</span>
+                </p>
+
+                <p style="font-size:13px; color:#333; margin:2px 0;">
+                    <b>Thời lượng:</b> <span th:text="${showtime.movie.duration}">120 phút</span>
+                </p>
+            </div>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <div class="ticket-details">
+            <div class="detail-item">
+                <strong>Rạp:</strong>
+                <span th:text="${showtime.room.cinema.cinemaName}">Tên rạp</span>
+            </div>
+            <div class="detail-item">
+                <strong>Phòng:</strong>
+                <span th:text="${showtime.room.roomName}">01</span>
+            </div>
+            <div class="detail-item">
+                <strong>Suất chiếu:</strong>
+                <span
+                        th:text="${showtime.startTime + ' - ' + #temporals.format(showtime.startDate, 'dd/MM/yyyy')}">18:00</span>
+            </div>
+
+            <hr class="sidebar-divider">
+
+            <div class="detail-item">
+                <strong>Ghế chọn:</strong>
+                <span id="selectedSeatsList" class="highlight-blue"
+                      style="max-width: 150px; text-align: right;">...</span>
+            </div>
+        </div>
+
+        <div class="sidebar-checkout">
+            <div class="detail-item" style="margin-top: 15px; align-items: center;">
+                <span>Tổng cộng:</span>
+                <span class="total-price" id="totalPrice">0 đ</span>
+            </div>
+
+            <div
+                    style="background: #fffbe6; border: 1px solid #ffe58f; padding: 10px; border-radius: 6px; margin-top: 15px; font-size: 13px; text-align: center;">
+                Thời gian giữ ghế: <span id="countdown" style="color: #d46b08; font-weight: bold;">10:00</span>
+            </div>
+
+            <button class="btn-continue-sidebar" onclick="submitBooking()" id="btnCheckout" disabled>TIẾP
+                TỤC</button>
+            <form id="submitSeatsForm" th:action="@{/booking/combo}" method="POST" style="display: none;">
+                <input type="hidden" name="showtimeId" th:value="${showtime.id}">
+                <input type="hidden" name="seatIds" id="inputSeatIds">
+                <input type="hidden" name="seatNames" id="inputSeatNames">
+                <input type="hidden" name="ticketPrice" id="inputTicketPrice">
+            </form>
+
+            <a th:href="@{/home}" style="display: block; text-align: center; margin-top: 15px; color: #666; text-decoration: none; font-size: 14px;">Quay lại</a>
+
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const showtimeId = [[${ showtime.id }]];
+    // Tạo URL API động bằng Thymeleaf để tránh sai tên Project
+    const apiUrl = [[@{/api/booking/seat-map/}]];
+
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const grid = document.getElementById('seatsGrid');
+    const loading = document.getElementById('loadingSeats');
+    let selectedSeats = [];
+
+    // 1. GỌI API
+    fetch(apiUrl + showtimeId)
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            return res.json();
+        })
+        .then(data => {
+            console.log("1. Dữ liệu gốc từ API:", data); // F12 để xem dòng này
+            loading.style.display = 'none';
+            grid.style.display = 'grid';
+
+            // CHUẨN HÓA DỮ LIỆU
+            // Đảm bảo dù API trả về rowName hay row thì vẫn lấy được
+            const normalizedSeats = data.map(s => {
+                // Lấy row: ưu tiên row -> rowName -> cắt từ code (vd A1 -> A)
+                let r = s.row || s.rowName;
+                if (!r && s.code) r = s.code.charAt(0);
+
+                // Lấy col: ưu tiên col -> seatColumn -> cắt từ code (vd A1 -> 1)
+                let c = s.col || s.seatColumn;
+                if (!c && s.code) c = s.code.substring(1);
+
+                return {
+                    id: s.id,
+                    code: s.code || s.seatNumber || (r + c),
+                    row: String(r).trim().toUpperCase(), // Chuyển về chữ hoa "A"
+                    col: parseInt(c),                    // Chuyển về số nguyên 1
+                    price: s.price,
+                    type: (s.type || s.seatType || 'NORMAL').toUpperCase(),
+                    isBooked: s.isBooked === true || s.isBooked === "true"
+                };
+            });
+
+            console.log("2. Dữ liệu sau khi chuẩn hóa:", normalizedSeats);
+            renderSeatMap(normalizedSeats);
+        })
+        .catch(err => {
+            console.error(err);
+            loading.innerHTML = '<span style="color:red">Lỗi tải dữ liệu. Hãy nhấn F12 xem Console.</span>';
+        });
+
+    // 2. HÀM VẼ GHẾ
+    function renderSeatMap(seats) {
+        grid.innerHTML = '';
+
+        if (!seats || seats.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Dữ liệu ghế trống.</p>';
+            return;
+        }
+
+        // --- BƯỚC 1: TÌM KÍCH THƯỚC LƯỚI ---
+        let maxRowIdx = -1;
+        let maxCol = 0;
+
+        seats.forEach(s => {
+            if (s.row) {
+                const rIdx = alphabet.indexOf(s.row);
+                if (rIdx > maxRowIdx) maxRowIdx = rIdx;
+            }
+            if (!isNaN(s.col) && s.col > maxCol) maxCol = s.col;
+        });
+
+        console.log(`3. Kích thước lưới: ${maxRowIdx + 1} hàng x ${maxCol} cột`);
+
+        if (maxRowIdx === -1 || maxCol === 0) {
+            grid.innerHTML = '<p style="color:red">Lỗi dữ liệu: Không xác định được số hàng/cột.</p>';
+            return;
+        }
+
+        const rowCount = maxRowIdx + 1;
+        const colCount = maxCol;
+
+        // Setup CSS Grid
+        grid.style.gridTemplateColumns = `repeat(${colCount}, 32px)`;
+
+        // --- BƯỚC 2: VẼ LƯỚI ĐẦY ĐỦ ---
+        for (let i = 0; i < rowCount; i++) {
+            const currentRowChar = alphabet[i]; // A, B, C...
+
+            for (let j = 1; j <= colCount; j++) {
+
+                // Tìm ghế khớp vị trí
+                const foundSeat = seats.find(s => s.row === currentRowChar && s.col === j);
+                const seatEl = document.createElement('div');
+
+                if (foundSeat) {
+                    // === CÓ GHẾ ===
+                    let cssClass = 'standard';
+                    const type = foundSeat.type;
+
+                    if (type.includes('VIP')) cssClass = 'vip';
+                    else if (type.includes('SWEET') || type.includes('ĐÔI') || type.includes('DOUBLE')) cssClass = 'double';
+
+                    seatEl.className = `seat ${cssClass}`;
+                    seatEl.innerText = foundSeat.code;
+
+                    // Xử lý ghế đôi
+                    if (cssClass === 'double') {
+                        seatEl.style.gridColumn = `span 2`; // CSS Grid Span
+                        seatEl.style.width = 'auto'; // Để tự giãn lấp đầy 2 ô + gap
+                        j++; // Bỏ qua ô tiếp theo trong vòng lặp vì ghế đôi đã chiếm chỗ
+                    }
+
+                    if (foundSeat.isBooked) {
+                        seatEl.classList.add('sold');
+                    } else {
+                        seatEl.onclick = () => toggleSeat(seatEl, foundSeat);
+                    }
+                } else {
+                    // === KHÔNG CÓ GHẾ (LỐI ĐI) ===
+                    seatEl.className = 'seat-placeholder';
+                    // Tạm thời để visible để debug xem lưới có vẽ đúng không
+                    // Sau khi ok thì đổi thành 'hidden'
+                    seatEl.style.visibility = 'hidden';
+                    seatEl.style.width = '32px';
+                    seatEl.style.height = '32px';
+                }
+
+                grid.appendChild(seatEl);
+            }
+        }
+    }
+
+    // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
+    function toggleSeat(el, data) {
+        if (el.classList.contains('sold')) return;
+        el.classList.toggle('selected');
+
+        if (el.classList.contains('selected')) {
+            if (selectedSeats.length >= 8) {
+                alert("Tối đa 8 ghế!");
+                el.classList.remove('selected');
+                return;
+            }
+            selectedSeats.push(data);
+        } else {
+            selectedSeats = selectedSeats.filter(item => item.id !== data.id);
+        }
+        updateSidebar();
+    }
+
+    function updateSidebar() {
+        const listEl = document.getElementById('selectedSeatsList');
+        const priceEl = document.getElementById('totalPrice');
+        const btn = document.getElementById('btnCheckout');
+
+        if (selectedSeats.length > 0) {
+            selectedSeats.sort((a, b) => (a.code || "").localeCompare(b.code || ""));
+            listEl.innerText = selectedSeats.map(s => s.code).join(', ');
+            const total = selectedSeats.reduce((sum, s) => sum + (s.price || 0), 0);
+            priceEl.innerText = total.toLocaleString('vi-VN') + " đ";
+            btn.disabled = false;
+        } else {
+            listEl.innerText = "...";
+            priceEl.innerText = "0 đ";
+            btn.disabled = true;
+        }
+    }
+
+    function submitBooking() {
+        if (selectedSeats.length === 0) {
+            alert("Vui lòng chọn ít nhất 1 ghế!");
+            return;
+        }
+
+        // 1. Trích xuất ID các ghế (Ví dụ: "101,102")
+        const seatIds = selectedSeats.map(s => s.id).join(',');
+
+        // 2. Trích xuất Tên các ghế (Ví dụ: "A1, A2")
+        const seatNames = selectedSeats.map(s => s.code).join(', ');
+
+        // 3. Tính tổng tiền vé
+        const totalPrice = selectedSeats.reduce((sum, s) => sum + (s.price || 0), 1000000);
+
+        // 4. Gán vào Form ẩn
+        document.getElementById('inputSeatIds').value = seatIds;
+        document.getElementById('inputSeatNames').value = seatNames;
+        document.getElementById('inputTicketPrice').value = totalPrice;
+
+        // 5. Submit Form gọi về Back-end
+        document.getElementById('submitSeatsForm').submit();
+    }
+
+    // --- ĐỒNG BỘ ĐẾM NGƯỢC THỜI GIAN GIỮ GHẾ ---
+    let holdTime = 10 * 60 * 1000; // 10 phút (tính bằng mili-giây)
+    let endTime = sessionStorage.getItem('bookingEndTime');
+
+    // Nếu chưa có thời gian kết thúc hoặc thời gian đã trôi qua, thiết lập lại 10 phút mới
+    if (!endTime || parseInt(endTime) < new Date().getTime()) {
+        endTime = new Date().getTime() + holdTime;
+        sessionStorage.setItem('bookingEndTime', endTime);
+    }
+
+    const timerInterval = setInterval(() => {
+        let now = new Date().getTime();
+        let timeRemaining = Math.floor((endTime - now) / 1000);
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            sessionStorage.removeItem('bookingEndTime');
+            alert("Đã hết thời gian giữ ghế! Vui lòng chọn lại từ đầu.");
+            window.location.href = '/home'; // Quay về trang chủ
+            return;
+        }
+
+        const m = Math.floor(timeRemaining / 60);
+        const s = timeRemaining % 60;
+        const cd = document.getElementById('countdown');
+        if (cd) cd.innerText = `${m}:${s < 10 ? '0' + s : s}`;
+    }, 1000);
+</script>
+</body>
+
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Beta Cinemas | Quản lý Voucher</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- GIỮ NGUYÊN CSS CỐT LÕI CỦA BẠN --- */
+        :root {
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --primary: #0054a6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f1f5f9;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); display: flex; color: #1e293b; }
+
+        .sidebar { width: 260px; background: var(--sidebar-bg); height: 100vh; color: #f8fafc; position: fixed; }
+        .sidebar-header { padding: 25px; font-size: 20px; font-weight: 800; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+        .sidebar-nav { list-style: none; padding: 15px 0; margin: 0; }
+        .sidebar-nav a { text-decoration: none; color: inherit; }
+        .sidebar-nav li { padding: 12px 25px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #94a3b8; transition: 0.2s; }
+        .sidebar-nav li.active { background: var(--sidebar-hover); color: white; border-left: 4px solid var(--primary); }
+
+        .main { margin-left: 260px; flex: 1; padding: 30px; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: var(--card-shadow); border-left: 5px solid var(--primary); }
+        .stat-label { color: #64748b; font-size: 14px; margin-bottom: 5px; }
+        .stat-value { font-size: 24px; font-weight: 800; }
+
+        /* Table Container */
+        .table-container { background: white; border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden; border: 1px solid #e2e8f0; }
+        th, td { padding: 16px 20px; text-align: left; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        th { background: #f8fafc; font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tr:hover { background-color: #f8fafc; }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+        /* Tỷ lệ cột cho Voucher */
+        th:nth-child(1), td:nth-child(1) { width: 20%; } /* Mã Voucher */
+        th:nth-child(2), td:nth-child(2) { width: 15%; } /* % Giảm */
+        th:nth-child(3), td:nth-child(3) { width: 20%; } /* Ngày tạo */
+        th:nth-child(4), td:nth-child(4) { width: 20%; } /* Hạn dùng */
+        th:nth-child(5), td:nth-child(5) { width: 15%; text-align: center; } /* Trạng thái */
+        th:nth-child(6), td:nth-child(6) { width: 10%; text-align: right; } /* Hành động */
+
+        .status-pill {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            min-width: 90px; white-space: nowrap;
+        }
+        .status-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-expired { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+        .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-reset { background: #e2e8f0; color: #475569; }
+
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; width: 600px; border-radius: 12px; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal-header { padding: 20px 30px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 25px 30px; }
+        .modal-footer { padding: 15px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #475569; }
+        .form-input { width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+
+        /* Pagination Styles */
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 30px; margin-bottom: 30px; }
+        .page-item { padding: 8px 16px; border-radius: 8px; border: 1px solid #e2e8f0; color: #64748b; font-weight: 600; text-decoration: none; transition: 0.2s; background: white; }
+        .page-item:hover { background: #f8fafc; color: var(--primary); border-color: var(--primary); }
+        .page-item.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-item.disabled { color: #cbd5e1; cursor: not-allowed; pointer-events: none; }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" height="35"
+             style="filter: brightness(0) invert(1);">
+        <span>ADMIN</span>
+    </div>
+    <ul class="sidebar-nav">
+        <a th:href="@{/admin/dashboard}" style="text-decoration: none;">
+            <li><i class="fas fa-chart-line"></i> Dashboard</li>
+        </a>
+        <a th:href="@{/admin/accounts}" style="text-decoration: none;">
+            <li><i class="fas fa-users"></i> Quản lý tài khoản</li>
+        </a>
+        <a th:href="@{/admin/blogs}" style="text-decoration: none;">
+            <li><i class="fas fa-blog"></i> Quản lý bài đăng</li>
+        </a>
+        <a th:href="@{/admin/manager_movie}" style="text-decoration: none;">
+            <li><i class="fas fa-film"></i> Quản lý phim</li>
+        </a>
+        <a th:href="@{/admin/manager_schedule}" style="text-decoration: none;">
+            <li><i class="fas fa-calendar-alt"></i> Lịch chiếu</li>
+        </a>
+        <a th:href="@{/admin/manager_ticket_price}" style="text-decoration: none;">
+            <li><i class="fas fa-tags"></i> Giá Vé & Loại Vé</li>
+        </a>
+        <a th:href="@{/admin/manager_combo}" style="text-decoration: none;">
+            <li><i class="fas fa-utensils"></i> Quản lý Combo</li>
+        </a>
+        <a th:href="@{/admin/manager_cinema}" style="text-decoration: none;">
+            <li><i class="fas fa-theater-masks"></i> Rạp & Phòng</li>
+        </a>
+        <a th:href="@{/admin/manager_news}" style="text-decoration: none;">
+            <li><i class="fas fa-newspaper"></i> Quản lý tin tức</li>
+        </a>
+        <a th:href="@{/admin/manager_vouchers}" style="text-decoration: none;">
+            <li class="active"><i class="fas fa-ticket-alt"></i> Quản lý Voucher</li>
+        </a>
+        <a th:href="@{/profile}" style="text-decoration: none;">
+            <li><i class="fas fa-user-circle"></i> Thông tin cá nhân</li>
+        </a>
+        <a th:href="@{/logout}" style="text-decoration: none;">
+            <li><i class="fas fa-sign-out-alt"></i> Đăng xuất</li>
+        </a>
+    </ul>
+</aside>
+
+<main class="main">
+    <div class="header-content">
+        <div>
+            <h1 style="margin: 0;">Quản lý Voucher</h1>
+            <p style="color: #64748b; margin: 5px 0 0;">Thiết lập mã giảm giá cho khách hàng</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal()">
+            <i class="fas fa-plus"></i> Tạo Voucher mới
+        </button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Tổng Voucher</div><div class="stat-value" th:text="${totalVouchers}">0</div></div>
+        <div class="stat-card" style="border-color: var(--success);"><div class="stat-label">Đang hoạt động</div><div class="stat-value" th:text="${activeVouchers}">0</div></div>
+        <div class="stat-card" style="border-color: var(--danger);"><div class="stat-label">Đã hết hạn</div><div class="stat-value" th:text="${expiredVouchers}">0</div></div>
+        <div class="stat-card" style="border-color: var(--warning);"><div class="stat-label">Giảm giá cao nhất</div><div class="stat-value" th:text="${maxDiscount + '%'}">0%</div></div>
+    </div>
+
+    <div class="filter-bar" style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--card-shadow); display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; border: 1px solid #e2e8f0;">
+        <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #64748b;">Tìm kiếm mã</label>
+            <div style="position: relative;">
+                <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                <input type="text" id="filterCode" onkeyup="filterData()" class="form-input" placeholder="Nhập mã voucher..." style="padding-left: 35px;">
+            </div>
+        </div>
+
+        <div style="width: 200px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #64748b;">Trạng thái</label>
+            <select id="filterStatus" onchange="filterData()" class="form-input">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">Còn hạn sử dụng</option>
+                <option value="expired">Đã hết hạn</option>
+            </select>
+        </div>
+
+        <div style="width: 200px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #64748b;">Mức giảm (%)</label>
+            <select id="filterDiscount" onchange="filterData()" class="form-input">
+                <option value="all">Tất cả mức giảm</option>
+                <option value="high">Trên 50%</option>
+                <option value="medium">20% - 50%</option>
+                <option value="low">Dưới 20%</option>
+            </select>
+        </div>
+
+        <button class="btn btn-reset" onclick="resetFilters()" style="height: 41px;">
+            <i class="fas fa-undo"></i> Làm mới
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+            <tr>
+                <th>MÃ VOUCHER</th>
+                <th>% GIẢM</th>
+                <th>NGÀY TẠO</th>
+                <th>HẠN SỬ DỤNG</th>
+                <th style="text-align: center;">TRẠNG THÁI</th>
+                <th style="text-align: right;">HÀNH ĐỘNG</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="v : ${voucherList}">
+                <td>
+                    <span style="font-weight: 800; color: var(--primary); font-family: 'Courier New', Courier, monospace; font-size: 16px;" th:text="${v.code}">CODE123</span>
+                </td>
+                <td>
+                    <span style="font-weight: 700;" th:text="${v.discountPercent + '%'}">0%</span>
+                </td>
+                <td style="color: #64748b;" th:text="${#temporals.format(v.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                <td>
+                    <span style="font-weight: 600;" th:text="${#temporals.format(v.expiryDate, 'dd/MM/yyyy HH:mm')}"></span>
+                </td>
+                <td style="text-align: center;">
+                    <span th:if="${v.expiryDate.isAfter(T(java.time.LocalDateTime).now())}" class="status-pill status-active">Còn hạn</span>
+                    <span th:unless="${v.expiryDate.isAfter(T(java.time.LocalDateTime).now())}" class="status-pill status-expired">Hết hạn</span>
+                </td>
+                <td style="text-align: right;">
+                    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                        <button class="btn btn-warning" style="padding: 6px 10px; background: #f59e0b;"
+                                th:onclick="|openEditModal(${v.id})|">
+                            <i class="fas fa-edit"></i>
+                        </button>
+
+                        <button class="btn btn-danger" style="padding: 6px 10px;"
+                                th:onclick="'confirmDelete(' + ${v.id} + ')'">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Phân trang Voucher -->
+        <div class="pagination" th:if="${totalPages > 1}">
+            <a th:href="@{/admin/manager_vouchers(page=${currentPage - 1})}"
+               class="page-item" th:classappend="${currentPage == 1} ? 'disabled' : ''">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+
+            <a th:each="pageNum : ${#numbers.sequence(1, totalPages)}"
+               th:href="@{/admin/manager_vouchers(page=${pageNum})}"
+               class="page-item" th:classappend="${pageNum == currentPage} ? 'active' : ''"
+               th:text="${pageNum}">1</a>
+
+            <a th:href="@{/admin/manager_vouchers(page=${currentPage + 1})}"
+               class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled' : ''">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="voucherModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle" style="margin: 0; color: var(--primary); font-weight: 700;">Tạo Voucher Mới</h3>
+            <button onclick="closeModal()" style="background:none; border:none; font-size: 24px; cursor: pointer; color: #64748b;">&times;</button>
+        </div>
+
+        <form th:action="@{/admin/manager_vouchers/save}" th:object="${voucherForm}" method="POST">
+            <input type="hidden" th:field="*{id}" id="voucherId" />
+
+            <input type="hidden" th:field="*{createdAt}" />
+            <input type="hidden" th:field="*{active}" />
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Mã Voucher (*)</label>
+                    <input type="text" th:field="*{code}" id="formCode" class="form-input" placeholder="Ví dụ: BETA2024, KM50..." required />
+                </div>
+
+                <div class="form-group">
+                    <label>% Giảm giá (1 - 100) (*)</label>
+                    <input type="number" th:field="*{discountPercent}" id="formDiscount" class="form-input" min="1" max="100" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Thời hạn đến ngày (*)</label>
+                    <input type="datetime-local" th:field="*{expiryDate}" id="formExpiry" class="form-input" required />
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-reset" onclick="closeModal()">Hủy bỏ</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> <span id="btnSubmitText">Xác nhận tạo</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    function openModal() { document.getElementById('voucherModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('voucherModal').style.display = 'none'; }
+
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Xóa Voucher này?',
+            text: "Khách hàng sẽ không thể sử dụng mã này nữa.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Xóa ngay'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const baseUrl = [[@{/}]].replace(/\/$/, "");
+                window.location.href = `${baseUrl}/admin/manager_vouchers/delete/` + id;
+            }
+            });
+        }
+
+        /* Lấy dữ liệu từ Flash Attributes của Spring */
+        const successMsg = [[${success}]];
+        const errorMsg = [[${error}]];
+
+        if (successMsg) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: successMsg,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        if (errorMsg) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi rồi!',
+                text: errorMsg,
+                confirmButtonColor: '#0054a6'
+            });
+        }
+
+        function filterData() {
+            const searchCode = document.getElementById('filterCode').value.toUpperCase();
+            const statusVal = document.getElementById('filterStatus').value;
+            const discountVal = document.getElementById('filterDiscount').value;
+
+            const rows = document.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const codeText = row.querySelector('td:nth-child(1) span').innerText.toUpperCase();
+                const discountText = parseInt(row.querySelector('td:nth-child(2) span').innerText);
+                const statusText = row.querySelector('td:nth-child(5) .status-pill').innerText; // "Còn hạn" hoặc "Hết hạn"
+
+                // Logic lọc mã
+                const matchCode = codeText.includes(searchCode);
+
+                // Logic lọc trạng thái
+                let matchStatus = true;
+                if (statusVal === 'active') matchStatus = statusText.includes('Còn hạn');
+                if (statusVal === 'expired') matchStatus = statusText.includes('Hết hạn');
+
+                // Logic lọc mức giảm
+                let matchDiscount = true;
+                if (discountVal === 'high') matchDiscount = discountText > 50;
+                else if (discountVal === 'medium') matchDiscount = (discountText >= 20 && discountText <= 50);
+                else if (discountVal === 'low') matchDiscount = discountText < 20;
+// Hiển thị hoặc ẩn dòng
+                if (matchCode && matchStatus && matchDiscount) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filterCode').value = '';
+            document.getElementById('filterStatus').value = 'all';
+            document.getElementById('filterDiscount').value = 'all';
+            filterData();
+        }
+
+        function setMinDate() {
+            const now = new Date();
+            // Định dạng thành yyyy-MM-ddThh:mm (ví dụ: 2024-03-15T13:30)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('formExpiry').setAttribute('min', minDateTime);
+        }
+
+        // Hàm mở modal để tạo mới (Reset form)
+        function openModal() {
+            document.getElementById('modalTitle').innerText = "Tạo Voucher Mới";
+            document.getElementById('btnSubmitText').innerText = "Xác nhận tạo"; // Reset text nút
+            document.getElementById('voucherId').value = 0;
+            document.querySelector('form').reset();
+
+            setMinDate(); // Gọi hàm chặn ngày quá khứ
+            document.getElementById('voucherModal').style.display = 'flex';
+        }
+
+        function openEditModal(id) {
+            const baseUrl = [[@{/}]].replace(/\/$/, "");
+            const url = baseUrl + "/admin/manager_vouchers/edit/" + id;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error("Lỗi mạng");
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('modalTitle').innerText = "Cập nhật Voucher";
+                    document.getElementById('btnSubmitText').innerText = "Lưu thay đổi";
+
+                    document.getElementById('voucherId').value = data.id;
+                    document.getElementById('formCode').value = data.code;
+                    document.getElementById('formDiscount').value = data.discountPercent;
+
+                    // XỬ LÝ NGÀY THÁNG AN TOÀN
+                    if (data.expiryDate) {
+                        let dateStr = "";
+                        if (Array.isArray(data.expiryDate)) {
+                            // Nếu là mảng [YYYY, MM, DD, HH, mm]
+                            const [y, m, d, hh, mm] = data.expiryDate;
+                            dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+                        } else if (typeof data.expiryDate === 'string') {
+                            // Nếu là chuỗi thì mới dùng substring
+                            dateStr = data.expiryDate.substring(0, 16);
+                        }
+                        document.getElementById('formExpiry').value = dateStr;
+                    }
+
+                    document.getElementById('voucherModal').style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire('Lỗi!', 'Định dạng ngày tháng không khớp hoặc lỗi server', 'error');
+                });
+        }
+</script>
+
+</body>
+</html>

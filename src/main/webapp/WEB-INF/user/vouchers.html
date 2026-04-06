@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ưu đãi của tôi | Beta Cinemas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* --- TÁI SỬ DỤNG CSS TỪ TRANG HOME CỦA BẠN --- */
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fdfdfd; color: #333; }
+
+        /* Copy Header & Topbar từ Home của bạn sang đây để đồng bộ... */
+        .top-bar { background: #0054a6; color: white; padding: 8px 0; font-size: 13px; }
+        .top-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: flex-end; padding: 0 15px; }
+        .top-link { color: white; text-decoration: none; margin-left: 10px; }
+
+        .header-main { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        .header-container { max-width: 1300px; margin: 0 auto; display: flex; align-items: center; padding: 0 15px; }
+        .logo { height: 55px; margin-right: 25px; }
+
+        .nav-menu { display: flex; justify-content: center; flex-grow: 1; gap: 25px; }
+        .nav-menu a { text-decoration: none; color: #333; font-weight: 700; font-size: 16px; }
+
+        /* --- PHẦN RIÊNG CHO VOUCHER --- */
+        .page-title { text-align: center; margin: 40px 0; }
+        .page-title h2 { color: #0054a6; font-size: 28px; font-weight: 800; text-transform: uppercase; }
+        .page-title p { color: #64748b; margin-top: -10px; }
+
+        .voucher-container {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 0 15px;
+        }
+
+        .voucher-card {
+            background: white;
+            display: flex;
+            border-radius: 12px; /* Bo góc vừa phải trông hiện đại hơn */
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            height: 150px; /* Tăng nhẹ chiều cao để thoáng hơn */
+            transition: transform 0.3s ease;
+        }
+
+        .voucher-card:hover {
+            transform: translateY(-5px); /* Hiệu ứng bay lên khi di chuột */
+        }
+
+        .voucher-left {
+            background: linear-gradient(135deg, #0054a6 0%, #0072ff 100%);
+            color: white;
+            width: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-right: 2px dashed rgba(255,255,255,0.3); /* Đường kẻ đứt ngăn cách */
+        }
+
+        .voucher-left::before, .voucher-left::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            width: 20px;
+            height: 20px;
+            background: #fdfdfd; /* Phải trùng với màu background của body */
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .voucher-left::before { top: -10px; } /* Lỗ khuyết trên */
+        .voucher-left::after { bottom: -10px; } /* Lỗ khuyết dưới */
+
+        .voucher-left h2 { margin: 0; font-size: 36px; font-weight: 900; line-height: 1; }
+        .voucher-left span { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-top: 5px; }
+
+        .voucher-right {
+            flex: 1;
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Đẩy code lên đầu, nút xuống cuối */
+            align-items: flex-start;        /* Căn trái toàn bộ */
+            background: #ffffff;
+            position: relative;
+            height: auto;
+            min-height: 120px;
+        }
+
+        .voucher-code {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            padding: 6px 14px;
+            border-radius: 8px;
+            color: #0054a6;
+            font-weight: 800;
+            font-size: 16px;
+            display: inline-block;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            width: fit-content;
+            letter-spacing: 1px;
+        }
+
+        .voucher-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .voucher-info i { color: #94a3b8; }
+        .voucher-info b { color: #0f172a; font-weight: 700; }
+
+        .btn-copy, .btn-saved-status {
+            position: static;      /* QUAN TRỌNG: Bỏ chế độ lơ lửng */
+            margin-top: auto;      /* Đẩy nút xuống sát đáy */
+            align-self: flex-end;  /* Đẩy nút sang bên phải */
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-copy:hover {
+            background: #003d7a;
+            box-shadow: 0 6px 15px rgba(0, 84, 166, 0.3);
+        }
+
+        .btn-saved-status {
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: default;
+        }
+
+        .btn-saved-status i {
+            color: #10b981; /* Dấu check màu xanh lá */
+        }
+
+        /* Trạng thái hết hạn */
+        .voucher-card.expired { opacity: 0.6; filter: grayscale(1); }
+        .expired-label {
+            position: absolute;
+            top: 10px; right: -25px;
+            background: #ef4444;
+            color: white;
+            padding: 2px 30px;
+            transform: rotate(45deg);
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Empty state */
+        .empty-state { text-align: center; grid-column: 1/-1; padding: 50px; }
+
+        .footer {
+            background: #0054a6;
+            color: white;
+            padding: 50px 0;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 50px;
+            padding: 0 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="top-container">
+
+        <th:block th:if="${account == null}">
+            <a th:href="@{/login}" class="top-link">Đăng nhập</a>
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+            <a th:href="@{/register}" class="top-link">Đăng ký</a>
+        </th:block>
+
+        <th:block th:if="${account != null}">
+            <span style="color: white; font-size: 13px;">Xin chào, </span>
+
+            <a th:href="@{/profile}" class="top-link" th:text="${account.name}" style="margin-left: 5px; font-weight: bold;">Tên User</a>
+
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+
+            <a th:href="@{/logout}" class="top-link">Đăng xuất</a>
+        </th:block>
+
+        <img src="https://flagcdn.com/w40/gb.png" class="lang-icon" alt="English" style="margin-left: 15px;">
+    </div>
+</div>
+
+<header class="header-main">
+    <div class="header-container">
+        <a th:href="@{/home}"><img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" alt="Beta Cinemas" class="logo"></a>
+        <nav class="nav-menu">
+            <a th:href="@{/home}">LỊCH CHIẾU THEO RẠP</a>
+            <a th:href="@{/movies}">PHIM</a>
+            <a href="#">RẠP</a>
+            <a href="#">GIÁ VÉ</a>
+            <a th:href="@{/user/vouchers}" style="color: #0054a6">KHO VOUCHER</a>
+            <a th:href="@{/user/news}">TIN TỨC</a>
+            <a th:href="@{/blog}">CỘNG ĐỒNG</a>
+        </nav>
+    </div>
+</header>
+
+<div class="page-title">
+    <h2>Kho Voucher</h2>
+    <p>Sử dụng mã giảm giá để tận hưởng các suất chiếu giá rẻ hơn</p>
+</div>
+
+<div class="voucher-container">
+    <div th:if="${#lists.isEmpty(vouchers)}" class="empty-state">
+        <i class="fas fa-ticket-alt fa-3x" style="color: #cbd5e1; margin-bottom: 15px;"></i>
+        <p>Hiện tại không có mã giảm giá nào khả dụng.</p>
+    </div>
+
+    <div th:each="v : ${vouchers}" class="voucher-card">
+        <div class="voucher-left">
+            <h2 th:text="${v.discountPercent} + '%'">20%</h2>
+            <span>GIẢM GIÁ</span>
+        </div>
+
+        <div class="voucher-right">
+            <div class="voucher-info-group">
+                <div class="voucher-code" th:text="${v.code}">CODE</div>
+                <div class="voucher-info">
+                    <i class="far fa-calendar-alt"></i>
+                    <span>Hạn dùng: <b th:text="${#temporals.format(v.expiryDate, 'dd/MM/yyyy')}"></b></span>
+                </div>
+            </div>
+
+            <th:block th:if="${savedVoucherIds != null and #lists.contains(savedVoucherIds, v.id)}">
+                <button class="btn-saved-status" disabled>
+                    <i class="fas fa-check-circle"></i> ĐÃ LƯU
+                </button>
+            </th:block>
+
+            <th:block th:unless="${savedVoucherIds != null and #lists.contains(savedVoucherIds, v.id)}">
+                <button th:id="'btn-save-' + ${v.id}"
+                        class="btn-copy"
+                        th:onclick="'saveVoucher(' + ${v.id} + ')'">
+                    Lưu
+                </button>
+            </th:block>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="footer-container">
+        <div>
+            <h4>BETA CINEMAS</h4>
+            <p>Hệ thống rạp chiếu phim hàng đầu cho giới trẻ.</p>
+        </div>
+        <div>
+            <h4>LIÊN HỆ</h4>
+            <p>Hotline: 1900 636807</p>
+        </div>
+        <div>
+            <h4>KẾT NỐI</h4>
+            <p>Facebook | Youtube | TikTok</p>
+        </div>
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script th:inline="javascript">
+    function saveVoucher(id) {
+        console.log("Đang gọi lưu voucher ID:", id); // Kiểm tra xem hàm có chạy không
+
+        const btn = document.getElementById('btn-save-' + id);
+
+        // Sinh base URL tự động nhận diện context path của ứng dụng
+        const baseUrl = /*[[@{/}]]*/ '/';
+        const ajaxUrl = baseUrl.replace(/\/$/, "") + '/user/vouchers/save-to-library';
+
+        $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: { voucherId: id },
+            success: function(response) {
+                console.log("Phản hồi từ server:", response);
+                if(response === "success") {
+                    Swal.fire({
+                        title: 'Thành công!',
+                        text: 'Voucher đã được lưu vào kho.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    if(btn) {
+                        btn.className = "btn-saved-status";
+                        btn.innerHTML = '<i class="fas fa-check-circle"></i> ĐÃ LƯU';
+
+                        // Đảm bảo xóa bỏ mọi style đè lên cũ
+                        btn.style.position = "static";
+                        btn.style.marginTop = "auto";
+                        btn.style.alignSelf = "flex-end";
+                        btn.style.background = "";
+                        btn.style.color = "";
+
+                        btn.onclick = null;
+                        btn.disabled = true;
+                    }
+                } else if(response === "exists") {
+                    Swal.fire('Thông báo', 'Bạn đã sở hữu voucher này rồi!', 'info');
+                } else {
+                    Swal.fire('Lỗi', 'Không thể lưu voucher này!', 'error');
+                }
+            },
+            error: function(xhr) {
+                console.error("Lỗi AJAX:", xhr.status);
+                Swal.fire('Lỗi', 'Bạn cần đăng nhập để lưu voucher!', 'error');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

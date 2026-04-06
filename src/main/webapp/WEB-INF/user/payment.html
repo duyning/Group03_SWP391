@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thanh toán - Beta Cinemas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; color: #333; }
+        .payment-container { max-width: 1100px; margin: 40px auto; display: grid; grid-template-columns: 1fr 380px; gap: 30px; padding: 0 20px; }
+        .payment-main { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .section-title { color: #0054a6; font-size: 20px; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        .payment-method { border: 2px solid #edf2f7; border-radius: 10px; padding: 20px; display: flex; align-items: center; cursor: pointer; transition: all 0.3s ease; margin-bottom: 15px; }
+        .payment-method.active { border-color: #0054a6; background: #f0f9ff; box-shadow: 0 0 0 1px #0054a6; }
+        .payment-method img { width: 60px; height: auto; margin-right: 20px; }
+        .sidebar { background: white; padding: 0; border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); overflow: hidden; height: fit-content; position: sticky; top: 20px; }
+        .sidebar-header { background: #0054a6; color: white; padding: 15px; text-align: center; font-weight: 700; text-transform: uppercase; }
+        .sidebar-content { padding: 20px; }
+        .movie-info-side { display: flex; gap: 15px; margin-bottom: 20px; }
+        .movie-info-side img { width: 100px; height: 145px; object-fit: cover; border-radius: 8px; }
+        .sidebar-movie-title { font-size: 17px; margin: 0; color: #1a202c; font-weight: 800; }
+        .sidebar-divider { border: none; border-top: 1px dashed #e2e8f0; margin: 20px 0; }
+        .detail-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+        .total-highlight { font-size: 24px; color: #0054a6; font-weight: 900; }
+        .btn-pay { background: linear-gradient(135deg, #f26b38 0%, #e55a2b 100%); color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-weight: 800; font-size: 18px; cursor: pointer; }
+        .btn-back { display: block; text-align: center; margin-top: 15px; color: #718096; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="payment-container">
+    <div class="payment-main">
+        <h2 class="section-title"><i class="fas fa-credit-card"></i> Hình thức thanh toán</h2>
+        <div class="payment-method active">
+            <img src="https://img.icons8.com/color/48/qr-code.png" alt="VietQR">
+            <div>
+                <div style="font-weight: 700;">Chuyển khoản qua QR-Code (VietQR)</div>
+                <div style="font-size: 12px; color: #666;">Dùng ứng dụng ngân hàng bất kỳ để quét mã</div>
+            </div>
+            <i class="fas fa-check-circle" style="margin-left: auto; color: #0054a6;"></i>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-header">Thông tin vé</div>
+        <div class="sidebar-content">
+            <div class="movie-info-side">
+                <img th:src="@{'/' + ${showtime.movie.imgUrl}}" alt="Poster"
+                     onerror="this.src='https://via.placeholder.com/100x145?text=No+Image'">
+
+                <div class="movie-title-group">
+                    <h2 class="sidebar-movie-title" th:text="${showtime.movie.movieName}">TÊN PHIM</h2>
+                    <div class="movie-meta"><b>Loại phòng:</b> <span th:text="${showtime.room.roomType}">2D</span></div>
+                    <div class="movie-meta"><b>Thể loại:</b> <span th:text="${showtime.movie.type}">Hành động</span></div>
+                    <div class="movie-meta"><b>Thời lượng:</b> <span th:text="${showtime.movie.duration}">120 phút</span></div>
+                </div>
+            </div>
+
+            <hr class="sidebar-divider">
+
+            <div class="ticket-details">
+                <div class="detail-item">
+                    <strong>Rạp:</strong>
+                    <span th:text="${showtime.room.cinema.cinemaName}">Tên rạp</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Phòng:</strong>
+                    <span th:text="${showtime.room.roomName}">01</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Suất chiếu:</strong>
+                    <span th:text="${#temporals.format(showtime.startTime, 'HH:mm') + ' - ' + #temporals.format(showtime.startDate, 'dd/MM/yyyy')}">18:00 - 11/03/2026</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Ghế:</strong>
+                    <span style="color: #0054a6;">
+                    <span th:each="seat, iterStat : ${selectedSeats}"
+                         th:text="${seat.seatNumber} + ${!iterStat.last ? ', ' : ''}"></span>
+                </span>
+                </div>
+                <div class="detail-item" th:if="${not #lists.isEmpty(selectedCombos)}">
+                    <strong>Combo:</strong>
+                    <span style="color: #0054a6;">
+                    <div th:each="c : ${selectedCombos}" th:text="${c.quantity + 'x ' + c.comboName}"></div>
+                </span>
+                </div>
+            </div>
+
+            <hr class="sidebar-divider">
+
+            <div class="promo-section">
+                <label style="font-size: 13px; font-weight: 700;">MÃ GIẢM GIÁ</label>
+                <div style="display: flex; gap: 8px; margin: 10px 0;">
+                    <input type="text" id="couponInput" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <button type="button" id="btnApplyVoucher" style="background: #0054a6; color: white; border: none; border-radius: 8px; padding: 0 15px; cursor: pointer;">ÁP DỤNG</button>
+                </div>
+
+                <div class="summary-box" style="background: #f8fafc; padding: 15px; border-radius: 12px;">
+                    <div class="detail-item"><strong>Tạm tính:</strong> <span id="subtotalDisplay" th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></div>
+                    <div id="discountRow" style="display: none; justify-content: space-between; color: #e11d48;">
+                        <strong>Giảm giá (<span id="discountPercent">0</span>%):</strong>
+                        <span>- <span id="discountValueDisplay">0</span> đ</span>
+                    </div>
+                    <hr style="margin: 10px 0;">
+                    <div class="detail-item">
+                        <span style="font-weight: 800;">TỔNG TIỀN:</span>
+                        <span class="total-highlight" id="finalTotalDisplay" th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
+                    </div>
+                </div>
+            </div>
+
+            <form th:action="@{/vnpay/create-payment}" method="POST" id="comboSubmitForm">
+                <input type="hidden" name="showtimeId" th:value="${showtime.id}">
+                <input type="hidden" name="seatIds" th:value="${seatIds}">
+                <input type="hidden" name="voucherCode" id="voucherCodeInput" value="">
+                <input type="hidden" name="seatNames" th:value="${seatNames}">
+                <input type="hidden" name="comboData" th:value="${comboData}">
+                <input type="hidden" name="totalPrice" id="finalAmountInput" th:value="${totalAmount}">
+
+                <button type="submit" class="btn-pay" style="margin-top: 15px; width: 100%;">THANH TOÁN</button>
+            </form>
+            <a th:href="@{/home}" class="btn-back"><i class="fas fa-arrow-left"></i> Quay lại</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener('DOMContentLoaded', function() {
+        const originalAmount = /*[[${totalAmount}]]*/ 0;
+
+        document.getElementById('btnApplyVoucher').addEventListener('click', function() {
+            const code = document.getElementById('couponInput').value.trim();
+            if (!code) {
+                Swal.fire('Opps!', 'Vui lòng nhập mã giảm giá', 'warning');
+                return;
+            }
+
+            const url = /*[[@{/api/vouchers/check}]]*/ '/api/vouchers/check';
+
+            Swal.fire({ title: 'Đang kiểm tra...', didOpen: () => Swal.showLoading() });
+
+            fetch(`${url}?code=${code}`)
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                        // Nếu lỗi (400, 404), quăng message lỗi từ Controller vào catch
+                        throw new Error(data.message || 'Lỗi không xác định');
+                    }
+                    return data; // Voucher object
+                })
+                .then(voucher => {
+                    Swal.close();
+
+                    // Tính toán dựa trên thuộc tính discountPercent của đối tượng Voucher
+                    const percent = voucher.discountPercent;
+                    const discount = (originalAmount * percent) / 100;
+                    const final = originalAmount - discount;
+
+                    // 1. Cập nhật giao diện hiển thị
+                    document.getElementById('discountRow').style.display = 'flex';
+                    document.getElementById('discountPercent').innerText = percent;
+                    document.getElementById('discountValueDisplay').innerText = discount.toLocaleString('vi-VN');
+                    document.getElementById('finalTotalDisplay').innerText = final.toLocaleString('vi-VN') + ' đ';
+
+                    // 2. Ghi dữ liệu vào Hidden Input để gửi Form sang VNPAY
+                    document.getElementById('finalAmountInput').value = final + 1000000;
+                    document.getElementById('voucherCodeInput').value = voucher.code;
+
+                    Swal.fire('Thành công', `Mã ${voucher.code} đã được áp dụng (Giảm ${percent}%)`, 'success');
+                })
+                .catch(err => {
+                    Swal.close();
+                    Swal.fire('Lỗi', err.message, 'error');
+
+                    // Reset về trạng thái ban đầu nếu áp dụng thất bại
+                    document.getElementById('discountRow').style.display = 'none';
+                    document.getElementById('finalTotalDisplay').innerText = originalAmount.toLocaleString('vi-VN') + ' đ';
+                    document.getElementById('finalAmountInput').value = originalAmount;
+                    document.getElementById('voucherCodeInput').value = "";
+                });
+        });
+    });
+    /*]]>*/
+</script>
+
+</body>
+</html>

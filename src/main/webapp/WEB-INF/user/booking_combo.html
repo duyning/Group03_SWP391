@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chọn Bắp Nước - Beta Cinemas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* --- CSS GIỮ NGUYÊN TỪ TRANG CHỌN GHẾ --- */
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding-bottom: 100px; }
+        .top-bar { background: #0054a6; color: white; padding: 8px 0; font-size: 13px; }
+        .top-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: flex-end; align-items: center; padding: 0 15px; }
+        .header-main { background: white; padding: 15px 0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); position: sticky; top: 0; z-index: 1000; }
+        .header-container { max-width: 1300px; margin: 0 auto; display: flex; align-items: center; padding: 0 15px; }
+        .logo { height: 55px; margin-right: 25px; }
+        .nav-menu { display: flex; justify-content: center; flex-grow: 1; gap: 25px; }
+        .nav-menu a { text-decoration: none; color: #333; font-weight: 700; font-size: 16px; }
+        .location-box select { padding: 8px 30px 8px 15px; border-radius: 20px; border: 1px solid #ddd; font-size: 14px; color: #333; appearance: none; background: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center; background-color: white; cursor: pointer; outline: none; }
+
+        .booking-container { max-width: 1200px; margin: 20px auto; display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 0 15px; }
+
+        /* Sidebar */
+        .sidebar { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); height: fit-content; position: sticky; top: 100px; }
+        .movie-info-side { display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px; }
+        .movie-info-side img { width: 90px; border-radius: 6px; object-fit: cover; aspect-ratio: 2/3; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
+        .sidebar-movie-title { font-size: 16px; margin: 0 0 5px 0; color: #0054a6; text-transform: uppercase; font-weight: 800; line-height: 1.4; }
+        .sidebar-divider { border-top: 1px dashed #ddd; margin: 15px 0; }
+        .ticket-details { font-size: 14px; line-height: 2; color: #333; }
+        .detail-item { display: flex; justify-content: space-between; }
+        .highlight-blue { color: #0054a6; font-weight: 700; }
+        .total-price { color: #0054a6; font-size: 20px; font-weight: 800; }
+        .btn-continue-sidebar { background: #0054a6; color: white; border: none; padding: 14px 0; width: 100%; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 15px; transition: background 0.2s; }
+        .btn-continue-sidebar:hover { background: #00448a; }
+
+        /* --- CSS MỚI CHO PHẦN COMBO --- */
+        .combo-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .combo-header {
+            font-size: 20px;
+            color: #0054a6;
+            font-weight: 800;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 15px;
+        }
+
+        .combo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .combo-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .combo-item:hover {
+            border-color: #0054a6;
+            box-shadow: 0 4px 12px rgba(0, 84, 166, 0.05);
+        }
+
+        .combo-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .combo-info {
+            flex-grow: 1;
+            padding: 0 20px;
+        }
+
+        .combo-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 5px 0;
+        }
+
+        .combo-desc {
+            font-size: 13px;
+            color: #64748b;
+            margin: 0 0 10px 0;
+            line-height: 1.4;
+        }
+
+        .combo-price {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0054a6;
+        }
+
+        .combo-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-qty {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            color: #1e293b;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn-qty:hover {
+            border-color: #0054a6;
+            color: #0054a6;
+            background: #f0f9ff;
+        }
+
+        .qty-number {
+            font-size: 16px;
+            font-weight: 700;
+            min-width: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+<div class="top-bar">
+    <div class="top-container">
+
+        <th:block th:if="${account == null}">
+            <a th:href="@{/login}" class="top-link">Đăng nhập</a>
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+            <a th:href="@{/register}" class="top-link">Đăng ký</a>
+        </th:block>
+
+        <th:block th:if="${account != null}">
+            <span style="color: white; font-size: 13px;">Xin chào, </span>
+
+            <a th:href="@{/profile}" class="top-link" th:text="${account.name}" style="margin-left: 5px; font-weight: bold;">Tên User</a>
+
+            <span style="margin-left: 10px; opacity: 0.5;">|</span>
+
+            <a th:href="@{/logout}" class="top-link">Đăng xuất</a>
+        </th:block>
+
+        <img src="https://flagcdn.com/w40/gb.png" class="lang-icon" alt="English" style="margin-left: 15px;">
+    </div>
+</div>
+
+<header class="header-main">
+    <div class="header-container">
+        <a th:href="@{/home}"><img src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" alt="Beta Cinemas" class="logo"></a>
+        <nav class="nav-menu">
+            <a th:href="@{/home}">LỊCH CHIẾU THEO RẠP</a>
+            <a th:href="@{/movies}">PHIM</a>
+            <a href="#">RẠP</a>
+            <a href="#">GIÁ VÉ</a>
+            <a th:href="@{/user/vouchers}">KHO VOUCHER</a>
+            <a th:href="@{/user/news}">TIN TỨC</a>
+            <a th:href="@{/blog}">CỘNG ĐỒNG</a>
+        </nav>
+    </div>
+</header>
+
+<div class="booking-container">
+
+    <div class="combo-section">
+        <h2 class="combo-header"><i class="fas fa-popcorn" style="margin-right: 10px;"></i> Chọn Combo Bắp Nước</h2>
+
+        <div class="combo-list">
+            <div class="combo-item" th:each="c : ${combos}" th:if="${c.active}">
+                <img th:src="@{'/' + ${c.imageUrl}}" alt="Combo" class="combo-img" onerror="this.src='https://placehold.co/100x100?text=Combo'">
+
+                <div class="combo-info">
+                    <h3 class="combo-name" th:text="${c.comboName}">Beta Combo</h3>
+                    <p class="combo-desc" th:text="${c.description}">1 Bắp lớn + 1 Nước lớn</p>
+                    <div class="combo-price" th:text="${#numbers.formatDecimal(c.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">65.000 đ</div>
+                </div>
+
+                <div class="combo-controls">
+                    <button class="btn-qty" th:onclick="updateQty([[${c.id}]], -1, [[${c.price}]], [[${c.comboName}]])">-</button>
+                    <span class="qty-number" th:id="'qty-' + ${c.id}">0</span>
+                    <button class="btn-qty" th:onclick="updateQty([[${c.id}]], 1, [[${c.price}]], [[${c.comboName}]])">+</button>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(combos)}" style="text-align: center; padding: 40px; color: #64748b;">
+                <i class="fas fa-box-open fa-3x" style="margin-bottom: 15px;"></i>
+                <p>Hiện chưa có combo nào khả dụng.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="movie-info-side">
+            <img th:src="@{'/' + ${showtime.movie.imgUrl}}" alt="Poster" onerror="this.src='https://placehold.co/90x135'">
+            <div class="movie-title-group">
+                <h2 class="sidebar-movie-title" th:text="${showtime.movie.movieName}">TÊN PHIM</h2>
+                <p style="font-size:13px; color:#666; margin:0 0 5px 0; font-weight:bold;" th:text="${showtime.room.roomType}">2D</p>
+                <p style="font-size:13px; color:#333; margin:2px 0;"><b>Thể loại:</b> <span th:text="${showtime.movie.type}">Hành động</span></p>
+                <p style="font-size:13px; color:#333; margin:2px 0;"><b>Thời lượng:</b> <span th:text="${showtime.movie.duration}">120 phút</span></p>
+            </div>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <div class="ticket-details">
+            <div class="detail-item">
+                <strong>Rạp:</strong>
+                <span th:text="${showtime.room.cinema.cinemaName}">Beta</span>
+            </div>
+            <div class="detail-item">
+                <strong>Phòng:</strong>
+                <span th:text="${showtime.room.roomName}">01</span>
+            </div>
+            <div class="detail-item">
+                <strong>Suất chiếu:</strong>
+                <span th:text="${showtime.startTime + ' | ' + #temporals.format(showtime.startDate, 'dd/MM/yyyy')}">18:00</span>
+            </div>
+
+            <hr class="sidebar-divider">
+
+            <div class="detail-item">
+                <strong>Ghế chọn:</strong>
+                <span class="highlight-blue" style="max-width: 150px; text-align: right;" th:text="${seatNames}">A1, A2</span>
+            </div>
+
+            <div class="detail-item" style="margin-top: 10px;">
+                <strong>Combo:</strong>
+                <span id="selectedCombosList" class="highlight-blue" style="max-width: 150px; text-align: right;">...</span>
+            </div>
+        </div>
+
+        <div class="sidebar-checkout">
+            <div class="detail-item" style="margin-top: 15px; align-items: center;">
+                <span>Tổng cộng:</span>
+                <span class="total-price" id="totalPrice">0 đ</span>
+            </div>
+
+            <div style="background: #fffbe6; border: 1px solid #ffe58f; padding: 10px; border-radius: 6px; margin-top: 15px; font-size: 13px; text-align: center;">
+                Thời gian giữ ghế: <span id="countdown" style="color: #d46b08; font-weight: bold;">05:00</span>
+            </div>
+
+            <form th:action="@{/booking/payment}" method="POST" id="comboSubmitForm">
+                <input type="hidden" name="showtimeId" th:value="${showtime.id}">
+                <input type="hidden" name="seatIds" th:value="${seatIds}">
+                <input type="hidden" name="seatNames" th:value="${seatNames}">
+                <input type="hidden" name="comboData" id="comboDataInput">
+
+                <button type="submit" class="btn-continue-sidebar" onclick="prepareSubmit()" style="margin-top: 15px;">TIẾP TỤC BƯỚC THANH TOÁN</button>
+            </form>
+
+            <a th:href="@{/booking/seat(showtimeId=${showtime.id})}"
+               style="display: block; text-align: center; margin-top: 15px; color: #666; text-decoration: none; font-size: 14px;">
+                Quay lại
+            </a>
+
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // Giá vé từ trang trước truyền sang (Model attribute)
+    // Nếu không có, gán mặc định là 0
+    let ticketTotal = [[${ticketTotalPrice != null ? ticketTotalPrice : 1000000}]];
+
+    // Giỏ hàng lưu trữ combo { id1: { name, price, qty }, id2: ... }
+    let cart = {};
+
+    // Hàm gọi khi bấm nút Cộng / Trừ
+    function updateQty(id, change, price, name) {
+        // Khởi tạo nếu chưa có trong giỏ
+        if (!cart[id]) {
+            cart[id] = { name: name, price: price, qty: 0 };
+        }
+
+        // Tăng/Giảm số lượng
+        cart[id].qty += change;
+        if (cart[id].qty < 0) cart[id].qty = 0; // Không cho âm
+
+        // Cập nhật số trên giao diện
+        document.getElementById('qty-' + id).innerText = cart[id].qty;
+
+        // Tính lại tổng tiền và danh sách text
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        let comboTotal = 0;
+        let textList = [];
+
+        // Duyệt qua giỏ hàng
+        for (let id in cart) {
+            let item = cart[id];
+            if (item.qty > 0) {
+                comboTotal += (item.price * item.qty);
+                textList.push(`${item.qty}x ${item.name}`); // Vd: "2x Beta Combo"
+            }
+        }
+
+        // 1. Cập nhật chữ Combo bên Sidebar
+        const listEl = document.getElementById('selectedCombosList');
+        if (textList.length > 0) {
+            listEl.innerText = textList.join(', ');
+        } else {
+            listEl.innerText = "...";
+        }
+
+        // 2. Tính TỔNG TIỀN (Giá vé + Giá Combo)
+        let grandTotal = ticketTotal + comboTotal;
+        document.getElementById('totalPrice').innerText = grandTotal.toLocaleString('vi-VN') + ' đ';
+        if(document.getElementById('totalPriceInput')) {
+            document.getElementById('totalPriceInput').value = grandTotal;
+        }
+    }
+
+    // Khi bấm "Tiếp tục thanh toán", đóng gói giỏ hàng thành chuỗi JSON gán vào input ẩn
+    function prepareSubmit() {
+        // Lọc ra những combo có qty > 0 để gửi đi
+        let finalCombos = [];
+        for (let id in cart) {
+            if (cart[id].qty > 0) {
+                finalCombos.push({ comboId: parseInt(id), quantity: cart[id].qty });
+            }
+        }
+        document.getElementById('comboDataInput').value = JSON.stringify(finalCombos);
+    }
+
+    // Khởi tạo UI lần đầu (để hiện giá vé)
+    updateCartUI();
+
+    // --- ĐỒNG BỘ ĐẾM NGƯỢC THỜI GIAN GIỮ GHẾ ---
+    let holdTime = 10 * 60 * 1000; // 10 phút (tính bằng mili-giây)
+    let endTime = sessionStorage.getItem('bookingEndTime');
+
+    // Nếu chưa có thời gian kết thúc hoặc thời gian đã trôi qua, thiết lập lại 10 phút mới
+    if (!endTime || parseInt(endTime) < new Date().getTime()) {
+        endTime = new Date().getTime() + holdTime;
+        sessionStorage.setItem('bookingEndTime', endTime);
+    }
+
+    const timerInterval = setInterval(() => {
+        let now = new Date().getTime();
+        let timeRemaining = Math.floor((endTime - now) / 1000);
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            sessionStorage.removeItem('bookingEndTime');
+            alert("Đã hết thời gian giữ ghế! Vui lòng chọn lại từ đầu.");
+            window.location.href = '/home'; // Quay về trang chủ
+            return;
+        }
+
+        const m = Math.floor(timeRemaining / 60);
+        const s = timeRemaining % 60;
+        const cd = document.getElementById('countdown');
+        if (cd) cd.innerText = `${m}:${s < 10 ? '0' + s : s}`;
+    }, 1000);
+</script>
+</body>
+</html>
