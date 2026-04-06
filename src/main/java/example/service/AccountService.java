@@ -16,6 +16,8 @@ public interface AccountService extends UserDetailsService {
 
     Account findByEmail(String email);
 
+    List<example.entity.Voucher> getAvailableVouchers(String email);
+
     void createManager(Account account);
 
     List<Account> findAll();

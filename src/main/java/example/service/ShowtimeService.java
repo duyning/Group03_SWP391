@@ -35,6 +35,22 @@ public class ShowtimeService {
         return showtimeRepository.findByCinemaAndDate(cinemaId, date);
     }
 
+    public List<Integer> getActiveMovieIds(Integer cinemaId) {
+        return showtimeRepository.findActiveMovieIds(cinemaId, LocalDate.now());
+    }
+
+    public List<LocalDate> getAvailableDates(Integer cinemaId) {
+        return showtimeRepository.findDatesWithShowtimes(cinemaId, LocalDate.now());
+    }
+
+    public Showtime getFirstAvailableShowtime(int movieId, Integer cinemaId) {
+        return showtimeRepository.findFirstAvailableShowtime(movieId, cinemaId, LocalDate.now(), LocalTime.now());
+    }
+
+    public List<LocalDate> getAvailableDatesForMovie(int movieId, Integer cinemaId) {
+        return showtimeRepository.findDatesWithShowtimesForMovie(movieId, cinemaId, LocalDate.now());
+    }
+
     @Transactional
     public void saveShowtime(Showtime s) throws Exception {
         // --- BỔ SUNG: Kiểm tra thời gian thực ---
@@ -42,21 +58,6 @@ public class ShowtimeService {
             throw new Exception("Không thể tạo suất chiếu trong quá khứ! Vui lòng chọn thời gian sau thời điểm hiện tại.");
         }
         // ----------------------------------------
-
-        // --- BỔ SUNG: Kiểm tra trạng thái Rạp và Phòng chiếu ---
-        if (s.getRoom() != null) {
-            String roomStatus = s.getRoom().getStatus();
-            if ("Bảo trì".equalsIgnoreCase(roomStatus) || "Tạm ngưng".equalsIgnoreCase(roomStatus)) {
-                throw new Exception("Lỗi! Phòng " + s.getRoom().getRoomName() + " đang " + roomStatus + ".");
-            }
-            if (s.getRoom().getCinema() != null) {
-                String cinemaStatus = s.getRoom().getCinema().getStatus();
-                if ("Bảo trì".equalsIgnoreCase(cinemaStatus) || "Tạm ngưng".equalsIgnoreCase(cinemaStatus)) {
-                    throw new Exception("Lỗi! Rạp " + s.getRoom().getCinema().getCinemaName() + " đang " + cinemaStatus + ".");
-                }
-            }
-        }
-        // ----------------------------------------------------
 
         calculateEndTime(s);
 
@@ -77,21 +78,6 @@ public class ShowtimeService {
         // --- BỔ SUNG: Kiểm tra thời gian thực khi cập nhật ---
         if (showtimeRepository.isPastDateTime(s.getStartDate(), s.getStartTime())) {
             throw new Exception("Thời gian cập nhật không hợp lệ (nằm trong quá khứ).");
-        }
-        // ----------------------------------------------------
-
-        // --- BỔ SUNG: Kiểm tra trạng thái Rạp và Phòng chiếu ---
-        if (s.getRoom() != null) {
-            String roomStatus = s.getRoom().getStatus();
-            if ("Bảo trì".equalsIgnoreCase(roomStatus) || "Tạm ngưng".equalsIgnoreCase(roomStatus)) {
-                throw new Exception("Lỗi! Phòng " + s.getRoom().getRoomName() + " đang " + roomStatus + ".");
-            }
-            if (s.getRoom().getCinema() != null) {
-                String cinemaStatus = s.getRoom().getCinema().getStatus();
-                if ("Bảo trì".equalsIgnoreCase(cinemaStatus) || "Tạm ngưng".equalsIgnoreCase(cinemaStatus)) {
-                    throw new Exception("Lỗi! Rạp " + s.getRoom().getCinema().getCinemaName() + " đang " + cinemaStatus + ".");
-                }
-            }
         }
         // ----------------------------------------------------
 
@@ -163,75 +149,8 @@ public class ShowtimeService {
         return showtimeRepository.findForBooking(movieId, cinemaId, date);
     }
 
-    // --- HÀM TẠO SUẤT CHIẾU TỰ ĐỘNG HÀNG LOẠT ---
-    @Transactional
-    public int autoGenerateShowtimes(example.entity.CinemaRoom room, example.entity.Movie movie, 
-                                     LocalDate startDate, LocalDate endDate,
-                                     LocalTime startTime, LocalTime endTimeLimit, int gapMinutes) throws Exception {
-
-        // Lấy thời lượng phim
-        String durationStr = movie.getDuration();
-        int durationMins = 90; // Mặc định nếu không phân tích được
-        if (durationStr != null && !durationStr.isEmpty()) {
-            try {
-                String numberOnly = durationStr.replaceAll("[^0-9]", "");
-                if (!numberOnly.isEmpty()) durationMins = Integer.parseInt(numberOnly);
-            } catch (Exception e) {}
-        }
-
-        int addedCount = 0;
-        
-        LocalDate currentDate = startDate;
-        while (!currentDate.isAfter(endDate)) {
-            LocalTime currentTime = startTime;
-            
-            // Loop bảo vệ chống lặp vô hạn
-            int safetyCounter = 0;
-            while (safetyCounter++ < 50) {
-                // Kiểm tra giới hạn thời gian (VD: không trễ hơn 23:00)
-                if (currentTime.isAfter(endTimeLimit)) {
-                    break;
-                }
-                
-                Showtime s = new Showtime();
-                s.setRoom(room);
-                s.setMovie(movie);
-                s.setStartDate(currentDate);
-                s.setStartTime(currentTime);
-                
-                // Logic gốc: EndTime = StartTime + Duration + 15'
-                LocalTime endTime = currentTime.plusMinutes(durationMins + 15);
-                s.setEndTime(endTime);
-                s.setStatus("Hoạt động");
-                
-                // Nếu bị trùng với một lịch khác đã tồn tại
-                if (checkOverlap(s, 0)) {
-                    // Tịnh tiến thời gian lên 15 phút để dò tìm khe hở kế tiếp
-                    LocalTime nextTime = currentTime.plusMinutes(15);
-                    if (nextTime.isBefore(currentTime)) break; // Rollover qua ngày mới thì dừng
-                    currentTime = nextTime;
-                    continue; 
-                }
-                
-                // Lưu thành công
-                showtimeRepository.save(s);
-                addedCount++;
-                
-                // Chuẩn bị cho suất chiếu tiếp theo
-                // Do EndTime đã tự cộng 15 phút, ta cấu trừ lại với Gap thực tế chuẩn bị
-                LocalTime nextTime = endTime.plusMinutes(gapMinutes - 15);
-                
-                // Kiểm tra rollover (qua ngưỡng nửa đêm)
-                if (nextTime.isBefore(currentTime)) {
-                    break;
-                }
-                currentTime = nextTime;
-            }
-            
-            currentDate = currentDate.plusDays(1);
-        }
-        
-        return addedCount;
+    public List<Showtime> getShowtimesByDate(LocalDate date) {
+        return showtimeRepository.findByDate(date);
     }
 
     // --- HÀM LẤY SƠ ĐỒ GHẾ (Trả về List Map) ---
@@ -333,46 +252,5 @@ public class ShowtimeService {
     private boolean checkIsWeekend(LocalDateTime date) {
         DayOfWeek day = date.getDayOfWeek();
         return day == DayOfWeek.FRIDAY || day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
-    }
-
-    // --- HÀM LẤY DANH SÁCH PHIM KÈM SUẤT CHIẾU THEO RẠP VÀ NGÀY ---
-    public List<Map<String, Object>> getMoviesWithShowtimes(int cinemaId, LocalDate date) {
-        List<Showtime> showtimes = getSchedule(cinemaId, date);
-        Map<Integer, Map<String, Object>> movieMap = new LinkedHashMap<>();
-
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
-
-        for (Showtime s : showtimes) {
-            // Lọc các suất chiếu đá qua
-            if (date.isBefore(today)) continue;
-            if (date.isEqual(today) && s.getStartTime().isBefore(now)) continue;
-
-            example.entity.Movie movie = s.getMovie();
-            Map<String, Object> movieData = movieMap.computeIfAbsent(movie.getId(), k -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", movie.getId());
-                map.put("movieName", movie.getMovieName());
-                map.put("imgUrl", movie.getImgUrl());
-                map.put("type", movie.getType());
-                map.put("duration", movie.getDuration());
-                map.put("showtimes", new ArrayList<Map<String, Object>>());
-                return map;
-            });
-
-            int totalSeats = seatRepository.findByRoomId(s.getRoom().getId()).size();
-            int bookedSeats = ticketRepository.getBookedSeatIds(s.getId()).size();
-            int seatsLeft = Math.max(0, totalSeats - bookedSeats);
-
-            Map<String, Object> stMap = new HashMap<>();
-            stMap.put("id", s.getId());
-            stMap.put("time", s.getStartTime().toString().substring(0, 5));
-            stMap.put("roomName", s.getRoom().getRoomName());
-            stMap.put("seatsLeft", seatsLeft);
-
-            ((List<Map<String, Object>>) movieData.get("showtimes")).add(stMap);
-        }
-
-        return new ArrayList<>(movieMap.values());
     }
 }

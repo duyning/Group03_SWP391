@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -39,6 +40,9 @@ public class BookingController {
     @Autowired
     private AccountService accountService;
 
+    @Autowired
+    private example.repository.TicketRepository ticketRepository;
+
     // Đây là hàm xử lý khi user vào link: .../booking/seat?showtimeId=10
     @GetMapping("/seat")
     public String seatPage(@RequestParam int showtimeId, Model model) {
@@ -54,8 +58,7 @@ public class BookingController {
         // 3. Đẩy dữ liệu sang View để Thymeleaf hiển thị (Tên phim, Rạp, Giờ...)
         model.addAttribute("showtime", showtime);
 
-        // 4. Trả về tên file HTML giao diện (nằm trong thư mục client)
-        // Đảm bảo bạn đã lưu file booking_seat.html trong thư mục view tương ứng (ví dụ: templates/client/ hoặc WEB-INF/client/)
+        // 4. Trả về tên file HTML giao diện
         return "user/booking_seat";
     }
 
@@ -65,7 +68,20 @@ public class BookingController {
             @RequestParam("seatIds") String seatIds,
             @RequestParam("seatNames") String seatNames,
             @RequestParam("ticketPrice") Double ticketPrice,
-            Model model) {
+            Model model,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttrs) {
+
+        // --- KIỂM TRA GHẾ VỪA ĐƯỢC BÁN (Concurrent Booking) ---
+        if (seatIds != null && !seatIds.isEmpty()) {
+            List<Integer> bookedIds = ticketRepository.getBookedSeatIds(showtimeId);
+            String[] arr = seatIds.split(",");
+            for (String sId : arr) {
+                if (bookedIds.contains(Integer.parseInt(sId.trim()))) {
+                    redirectAttrs.addFlashAttribute("errorMessage", "Rất tiếc! Ghế bạn chọn vừa được người khác thanh toán. Vui lòng chọn ghế khác.");
+                    return "redirect:/booking/seat?showtimeId=" + showtimeId;
+                }
+            }
+        }
 
         // 1. Lấy thông tin suất chiếu để hiển thị bên Sidebar
         Showtime showtime = showtimeService.getShowtimeById(showtimeId);
@@ -96,6 +112,7 @@ public class BookingController {
                                    @RequestParam("seatNames") String seatNames,
                                    @RequestParam("comboData") String comboData,
                                    HttpSession session,
+                                   Principal principal,
                                    Model model) {
 
         List<ComboBookingDTO> selectedCombos = new ArrayList<>();
@@ -120,6 +137,13 @@ public class BookingController {
         session.setAttribute("booking_totalAmount", totalAmount);
 
         Showtime showtime = showtimeService.getShowtimeById(showtimeId);
+        
+        // --- NẠP VOUCHERS CỦA USER ĐỂ HIỂN THỊ DROPDOWN TỰ ĐỘNG ---
+        if (principal != null) {
+            List<Voucher> availableVouchers = accountService.getAvailableVouchers(principal.getName());
+            model.addAttribute("myVouchers", availableVouchers);
+        }
+
         model.addAttribute("showtime", showtime);
         model.addAttribute("selectedSeats", selectedSeats);
         model.addAttribute("selectedCombos", selectedCombos);

@@ -508,69 +508,6 @@
             transform: scale(1.02);
             transition: 0.3s;
         }
-
-        /* ===== TÌM KIẾM NHANH ===== */
-        .search-filter-container {
-            max-width: 1000px;
-            margin: -30px auto 30px;
-            position: relative;
-            z-index: 100;
-            padding: 0 15px;
-        }
-
-        .search-filter-bar {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            padding: 15px 25px;
-            gap: 20px;
-            border: 1px solid #f0f0f0;
-        }
-
-        .search-item {
-            flex: 1;
-        }
-
-        .search-item select {
-            width: 100%;
-            padding: 12px 15px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            font-size: 15px;
-            font-weight: 500;
-            color: #333;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
-            background: #f9f9f9 url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 15px center;
-        }
-        
-        .search-item select:focus {
-            border-color: #0054a6;
-            background-color: white;
-            box-shadow: 0 0 0 3px rgba(0, 84, 166, 0.1);
-        }
-
-        .search-btn {
-            background-color: #f794a4;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-            height: 100%;
-            white-space: nowrap;
-        }
-
-        .search-btn:hover {
-            background-color: #e67d8f;
-            transform: translateY(-2px);
-        }
     </style>
 </head>
 
@@ -602,8 +539,23 @@
     <div class="header-container">
         <img th:href="@{/home}" src="https://www.betacinemas.vn/Assets/Common/logo/logo.png" alt="Beta Cinemas"
              class="logo">
+
+        <div class="location-box">
+            <form id="cinemaForm" action="" method="get" style="margin: 0;">
+                <!-- Giữ lại searchName, searchDate nếu có -->
+                <input type="hidden" name="searchName" th:value="${searchName}" th:if="${searchName != null}" />
+                <input type="hidden" name="searchDate" th:value="${searchDate}" th:if="${searchDate != null}" />
+                <select name="cinemaId" onchange="document.getElementById('cinemaForm').submit()">
+                    <option value=""></option>
+                    <th:block th:each="c : ${cinemas}">
+                        <option th:value="${c.id}" th:text="${c.cinemaName}" th:selected="${c.id == searchCinemaId}"></option>
+                    </th:block>
+                </select>
+            </form>
+        </div>
+
         <nav class="nav-menu">
-            <a th:href="@{/lich-chieu}">LỊCH CHIẾU THEO RẠP</a>
+            <a th:href="@{/home}" style="color: #0054a6">LỊCH CHIẾU THEO RẠP</a>
             <a th:href="@{/movies}">PHIM</a>
             <a href="#">RẠP</a>
             <a href="#">GIÁ VÉ</a>
@@ -632,16 +584,88 @@
     </div>
 </div>
 
+<style>
+.date-tabs-container {
+    max-width: 1200px;
+    margin: 40px auto 30px;
+    padding: 0 15px;
+}
+.date-tab-inner {
+    display: flex;
+    justify-content: flex-start;
+    gap: 30px;
+    border-bottom: 2px solid #e2e8f0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.date-tab-inner::-webkit-scrollbar { display: none; }
 
+.date-tab {
+    display: flex;
+    align-items: baseline;
+    padding: 10px 15px;
+    color: #1e293b;
+    gap: 5px;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: 0.2s;
+    user-select: none;
+}
+.date-tab:hover {
+    color: #0054a6;
+}
+.date-tab.active {
+    color: #0054a6;
+    border-bottom: 3px solid #0054a6;
+}
 
-<div class="tabs" id="tabContainer">
-    <span onclick="switchTab('sap-chieu', this)">PHIM SẮP CHIẾU</span>
-    <span class="active" onclick="switchTab('dang-chieu', this)">PHIM ĐANG CHIẾU</span>
-    <span onclick="switchTab('dac-biet', this)">SUẤT CHIẾU ĐẶC BIỆT</span>
+.showtime-pill {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: #0284c7;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.showtime-pill:hover {
+    background: #0054a6;
+    color: white;
+    border-color: #0054a6;
+}
+</style>
+
+<div class="date-tabs-container">
+    <div class="date-tab-inner">
+        <!-- Nếu KHÔNG có ngày nào -->
+        <div th:if="${#lists.isEmpty(availableDates)}" style="padding: 10px; color: #94a3b8; font-style: italic;">
+            Rạp này hiện chưa có lịch chiếu nào trong thời gian tới.
+        </div>
+        <!-- Nếu CÓ ngày chiếu -->
+        <th:block th:each="d : ${availableDates}">
+            <a th:href="@{/home(searchDate=${d}, cinemaId=${searchCinemaId})}" 
+               th:class="${d.equals(searchDate) ? 'date-tab active' : 'date-tab'}">
+                <div style="font-size: 38px; font-weight: 900;" th:text="${#temporals.format(d, 'dd')}">06</div>
+                <div style="font-size: 14px; font-weight: bold; position:relative; top: -5px;" 
+                     th:text="${'/' + #temporals.format(d, 'MM') + ' - ' + (d.dayOfWeek.value == 7 ? 'CN' : 'T' + (d.dayOfWeek.value + 1))}">/04 - T2</div>
+            </a>
+        </th:block>
+    </div>
 </div>
 
-<div class="movies" id="dang-chieu-list">
-    <div class="movie-card" th:each="m : ${dangChieu}">
+<div class="movies" id="schedule-list">
+    <!-- TRẠNG THÁI TRỐNG (Mới) -->
+    <div th:if="${#lists.isEmpty(moviesList)}" style="grid-column: 1 / -1; text-align: center; padding: 80px 20px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px dashed #cbd5e1;">
+        <i class="fas fa-calendar-times" style="font-size: 50px; color: #94a3b8; margin-bottom: 20px;"></i>
+        <h3 style="color: #1e293b; margin: 0 0 10px; font-size: 20px;">Không có suất chiếu!</h3>
+        <p style="color: #64748b; margin: 0; font-size: 16px;">Biết nói sao nhỉ... Hôm nay rạp đang chuẩn bị cho các siêu phẩm khác. Bạn vui lòng chọn rạp hoặc ngày chiếu khác nhé!</p>
+    </div>
+
+    <!-- DANH SÁCH PHIM -->
+    <div class="movie-card" th:each="m : ${moviesList}">
         <img th:src="@{'/' + ${m.imgUrl}}" th:alt="${m.movieName}" style="cursor: pointer;" class="movie-poster"
              th:data-trailer="${m.trailerUrl}" onclick="openTrailerModal(this.getAttribute('data-trailer'))"
              onerror="this.src='https://via.placeholder.com/230x345'">
@@ -650,51 +674,20 @@
         </a>
         <p><b>Thể loại:</b> <span th:text="${m.type}">Thể loại</span></p>
         <p><b>Thời lượng:</b> <span th:text="${m.duration}">Thời lượng</span></p>
-        <p><b>Ngày khởi chiếu:</b> <span class="date-blue" th:text="${m.releaseDate}">Đang chiếu</span></p>
-        <button class="buy-btn" th:onclick="openBookingModal([[${m.id}]], [[${m.movieName}]])">
-            <div class="ticket-icon"></div> MUA VÉ
-        </button>
-    </div>
-</div>
 
-<div class="movies" id="sap-chieu-list" style="display: none;">
-    <div class="movie-card" th:each="m : ${sapChieu}">
-        <img th:src="@{'/' + ${m.imgUrl}}" th:alt="${m.movieName}" style="cursor: pointer;" class="movie-poster"
-             th:data-trailer="${m.trailerUrl}" onclick="openTrailerModal(this.getAttribute('data-trailer'))"
-             onerror="this.src='https://via.placeholder.com/230x345'">
-        <a th:href="@{/movie/detail/{id}(id=${m.id})}" style="text-decoration: none;">
-            <h3 th:text="${m.movieName}" style="cursor: pointer; transition: color 0.2s;">Tên phim</h3>
-        </a>
-        <p><b>Thể loại:</b> <span th:text="${m.type}">Thể loại</span></p>
-        <p><b>Thời lượng:</b> <span th:text="${m.duration}">Thời lượng</span></p>
-        <p><b>Ngày khởi chiếu:</b> <span class="date-blue" th:text="${m.releaseDate}">Ngày chiếu</span></p>
-        <button class="buy-btn" th:onclick="openBookingModal([[${m.id}]], [[${m.movieName}]])">
-            <div class="ticket-icon"></div>
-            MUA VÉ
-        </button>
+        <!-- Suất chiếu trực tiếp -->
+        <div style="margin: 15px 0 10px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+            <p style="font-size: 13px; font-weight: bold; color: #475569; margin: 0 0 12px 0;">⏰ CHỌN SUẤT CHIẾU:</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <th:block th:each="st : ${showtimeMap.get(m.id)}"> 
+                    <div class="showtime-pill"
+                          th:title="${'Rạp: ' + st.room.cinema.cinemaName + ' - Ph: ' + st.room.roomName}"
+                          th:text="${#temporals.format(st.startTime, 'HH:mm')}"
+                          th:onclick="confirmAndBookTicket([[${m.id}]], [[${m.movieName}]], [[${st.room.cinema.id}]], [[${st.room.cinema.cinemaName}]], [[${#temporals.format(st.startDate, 'dd/MM/yyyy')}]], [[${#temporals.format(st.startTime, 'HH:mm')}]], [[${st.id}]])"></div>
+                </th:block>
+            </div>
+        </div>
     </div>
-</div>
-
-<div class="movies" id="dac-biet-list" style="display: none;">
-    <div class="movie-card" th:each="m : ${dacBiet}">
-        <img th:src="@{'/' + ${m.imgUrl}}" th:alt="${m.movieName}" style="cursor: pointer;" class="movie-poster"
-             th:data-trailer="${m.trailerUrl}" onclick="openTrailerModal(this.getAttribute('data-trailer'))"
-             onerror="this.src='https://via.placeholder.com/230x345'">
-        <a th:href="@{/movie/detail/{id}(id=${m.id})}" style="text-decoration: none;">
-            <h3 th:text="${m.movieName}" style="cursor: pointer; transition: color 0.2s;">Tên phim</h3>
-        </a>
-        <p><b>Thể loại:</b> <span th:text="${m.type}">Thể loại</span></p>
-        <p><b>Thời lượng:</b> <span th:text="${m.duration}">Thời lượng</span></p>
-        <p><b>Ngày khởi chiếu:</b> <span class="date-blue" th:text="${m.releaseDate}">Ngày chiếu</span></p>
-        <button class="buy-btn" th:onclick="openBookingModal([[${m.id}]], [[${m.movieName}]])">
-            <div class="ticket-icon"></div>
-            MUA VÉ
-        </button>
-    </div>
-</div>
-
-<!-- Container chứa kết quả tìm kiếm  -->
-<div class="movies" id="search-result-list" style="display: none;">
 </div>
 
 <footer class="footer">
@@ -714,42 +707,80 @@
     </div>
 </footer>
 
-<div id="bookingModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header-box">
-            <div class="close-btn" onclick="closeBookingModal()">&times;</div>
-            <input type="hidden" id="currentMovieId">
+<style>
+/* --- STYLES CHO CONFIRM MODAL MỚI --- */
+.confirm-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 10000;
+}
+.confirm-modal {
+    background: white; width: 650px; max-width: 95%; border-radius: 4px; border-top: 4px solid #fff;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; padding-bottom: 25px;
+}
+.confirm-modal-header {
+    display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; 
+}
+.confirm-modal-header h4 {
+    margin: 0; font-size: 18px; font-weight: 800; color: #333; text-transform: uppercase;
+}
+.confirm-modal-close {
+    font-size: 24px; cursor: pointer; color: #888; font-weight: 300; transition: 0.2s;
+}
+.confirm-modal-close:hover { color: #d9534f; }
+.confirm-modal-body {
+    padding: 10px 40px; text-align: center;
+}
+.confirm-modal-movie-title {
+    font-size: 28px; font-weight: 900; color: #0054a6; margin-bottom: 30px;
+}
+.confirm-modal-table {
+    width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 35px; border-top: 1px solid #eaeaea;
+}
+.confirm-modal-table th {
+    font-size: 15px; color: #555; font-weight: bold; padding: 15px 10px; border-bottom: 1px solid #eaeaea; text-transform: capitalize;
+}
+.confirm-modal-table td {
+    font-size: 16px; color: #111; font-weight: bold; padding: 20px 10px; background: #fcfcfc; border-bottom: 1px solid #eaeaea;
+}
+.confirm-modal-btn {
+    background: #0054a6; color: white; border: none; padding: 14px 45px; font-size: 15px; font-weight: bold;
+    border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: 0.2s;
+}
+.confirm-modal-btn:hover { background: #004385; }
+</style>
 
-            <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Lịch chiếu phim</div>
-            <div class="modal-header-title" id="modalMovieTitle">TÊN PHIM HIỂN THỊ Ở ĐÂY</div>
+<!-- MODAL XÁC NHẬN MỚI -->
+<div class="confirm-modal-overlay" id="confirmTicketModal">
+    <div class="confirm-modal">
+        <div class="confirm-modal-header">
+            <h4>BẠN ĐANG ĐẶT VÉ XEM PHIM</h4>
+            <span class="confirm-modal-close" onclick="closeConfirmModal()">✕</span>
         </div>
-
-        <div class="modal-body-content">
-            <div class="form-group center">
-                <select id="modalCinemaSelect" onchange="loadShowtimes()">
-                    <option value="" disabled selected>-- Chọn rạp chiếu --</option>
-                    <th:block th:each="c : ${cinemas}">
-                        <option th:value="${c.id}" th:text="${c.cinemaName}"></option>
-                    </th:block>
-                </select>
-            </div>
-
-            <div class="modal-date-picker" id="modalDateContainer">
-            </div>
-
-            <div class="modal-showtimes-section">
-                <div id="showtimeContainer">
-                    <div class="showtime-placeholder">
-                        <i class="fas fa-film" style="font-size: 40px; margin-bottom: 15px; opacity: 0.3;"></i>
-                        <p>Vui lòng chọn <b>Rạp</b> & <b>Ngày</b> để xem lịch chiếu</p>
-                    </div>
-                </div>
-
-                <div class="late-note-box">
-                    <i class="fas fa-info-circle"></i>
-                    <span>Lưu ý: Các suất chiếu sau 22:00 có thể áp dụng phụ thu đêm muộn.</span>
-                </div>
-            </div>
+        <div class="confirm-modal-body">
+            <div class="confirm-modal-movie-title" id="lblConfirmMovieName">Tên Phim</div>
+            <table class="confirm-modal-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Rạp chiếu</th>
+                        <th style="width: 30%">Ngày chiếu</th>
+                        <th style="width: 30%">Giờ chiếu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="lblConfirmCinema">Beta Quang Trung</td>
+                        <td id="lblConfirmDate">07/04/2026</td>
+                        <td id="lblConfirmTime">08:00</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <input type="hidden" id="hdnParamShowtimeId">
+            <input type="hidden" id="hdnParamMovieId">
+            <input type="hidden" id="hdnParamMovieName">
+            <input type="hidden" id="hdnParamCinemaId">
+            
+            <button class="confirm-modal-btn" onclick="proceedToBook()">ĐỒNG Ý</button>
         </div>
     </div>
 </div>
@@ -770,149 +801,89 @@
     </div>
 </div>
 
-<script th:inline="javascript">
-    // Hàm chuyển Tab: Chỉ ẩn/hiện Grid phim thay vì render lại
-    function switchTab(category, element) {
-        // 1. Cập nhật class Active cho Tab
-        document.querySelectorAll('.tabs span').forEach(s => s.classList.remove('active'));
-        if (element) element.classList.add('active');
-
-        // 2. Lấy tất cả các Grid danh sách phim
-        const dangChieuGrid = document.getElementById('dang-chieu-list');
-        const sapChieuGrid = document.getElementById('sap-chieu-list');
-        const dacBietGrid = document.getElementById('dac-biet-list'); // Grid mới thêm
-        const searchResultGrid = document.getElementById('search-result-list');
-
-        // 3. Ẩn tất cả trước khi hiện cái được chọn
-        dangChieuGrid.style.display = 'none';
-        sapChieuGrid.style.display = 'none';
-        dacBietGrid.style.display = 'none';
-        searchResultGrid.style.display = 'none';
-
-        // 4. Hiển thị Grid tương ứng
-        if (category === 'dang-chieu') {
-            dangChieuGrid.style.display = 'grid';
-        } else if (category === 'sap-chieu') {
-            sapChieuGrid.style.display = 'grid';
-        } else if (category === 'dac-biet') {
-            dacBietGrid.style.display = 'grid';
-        } else if (category === 'search') {
-            searchResultGrid.style.display = 'grid';
-        }
-    }
-
-    // --- QUICK SEARCH LOGIC ---
-    function initQuickDateSelect() {
-        const select = document.getElementById('quickDateSelect');
-        const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-        const today = new Date();
-
-        for (let i = 0; i < 7; i++) {
-            let d = new Date();
-            d.setDate(today.getDate() + i);
-
-            let dayLabel = i === 0 ? "Hôm nay" : daysOfWeek[d.getDay()];
-            let dateNum = String(d.getDate()).padStart(2, '0');
-            let monthNum = String(d.getMonth() + 1).padStart(2, '0');
-            let fullDate = d.getFullYear() + '-' + monthNum + '-' + dateNum;
-
-            let option = document.createElement('option');
-            option.value = fullDate;
-            option.text = `${dayLabel}, ${dateNum}/${monthNum}`;
-            select.appendChild(option);
-        }
-    }
-    
-    document.addEventListener("DOMContentLoaded", initQuickDateSelect);
-
-    function executeQuickSearch() {
-        const cinemaId = document.getElementById('quickCinemaSelect').value;
-        const date = document.getElementById('quickDateSelect').value;
-        const timeRange = document.getElementById('quickTimeSelect').value;
-
-        // Bỏ active tất cả các tab hiện tại hiện tại gán trạng thái search
-        switchTab('search', null);
-        const searchResultGrid = document.getElementById('search-result-list');
-        
-        searchResultGrid.innerHTML = '<div style="text-align:center;width:100%;padding:40px;color:#666;font-size:18px;">Đang tìm kiếm...</div>';
-
-        // Lấy tự động Context Path từ Thymeleaf bằng /*[[@{/path}]]*/
-        const baseUrl = /*[[@{/api/search/movies}]]*/ '/api/search/movies';
-        let url = baseUrl + `?date=${date}&timeRange=${timeRange}&cinemaId=${cinemaId}`;
-
-        // Lấy context path cho link tĩnh
-        let ctx = /*[[@{/}]]*/ '/';
-        if (!ctx.endsWith('/')) {
-            ctx += '/';
-        }
-        const detailBaseUrl = /*[[@{/movie/detail/}]]*/ '/movie/detail/';
-
-        fetch(url)
-            .then(res => res.json())
-            .then(movies => {
-                searchResultGrid.innerHTML = '';
-
-                if (movies.length === 0) {
-                    searchResultGrid.style.display = 'block';
-                    searchResultGrid.innerHTML = '<div style="text-align:center;width:100%;padding:40px;color:#666;font-size:18px;">Không có suất chiếu nào phù hợp với yêu cầu tìm kiếm của bạn.</div>';
-                    return;
-                }
-
-                movies.forEach(m => {
-                    // Normalize image path
-                    let cleanImgUrl = m.imgUrl ? (m.imgUrl.startsWith('/') ? m.imgUrl.substring(1) : m.imgUrl) : '';
-                    let imgPath = ctx + cleanImgUrl;
-
-                    let movieCard = `
-                        <div class="movie-card">
-                            <img src="${imgPath}" alt="${m.movieName}" style="cursor: pointer;" class="movie-poster"
-                                 data-trailer="${m.trailerUrl}" onclick="openTrailerModal(this.getAttribute('data-trailer'))"
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/230x345'">
-                            <a href="${detailBaseUrl}${m.id}" style="text-decoration: none;">
-                                <h3 style="cursor: pointer; transition: color 0.2s;">${m.movieName}</h3>
-                            </a>
-                            <p><b>Thể loại:</b> <span>${m.type}</span></p>
-                            <p><b>Thời lượng:</b> <span>${m.duration}</span></p>
-                            <p><b>Ngày khởi chiếu:</b> <span class="date-blue">${m.releaseDate}</span></p>
-                            <button class="buy-btn" onclick="openBookingModal(${m.id}, '${m.movieName.replace(/'/g, "\\'")}')">
-                                <div class="ticket-icon"></div> MUA VÉ
-                            </button>
-                        </div>
-                    `;
-                    searchResultGrid.insertAdjacentHTML('beforeend', movieCard);
-                });
-            })
-            .catch(err => {
-                console.error(err);
-                searchResultGrid.innerHTML = '<div style="text-align:center;width:100%;padding:40px;color:red;font-size:16px;">Đã xảy ra lỗi khi tải dữ liệu!</div>';
-            });
-    }
-
+<script>
     // --- LOGIC ĐẶT VÉ MỚI ---
-
-    // Biến lưu ngày đang chọn (Mặc định là hôm nay YYYY-MM-DD)
     let selectedDate = ((d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'))(new Date());
 
-    // 1. Mở Modal Đặt Vé
-    function openBookingModal(movieId, movieName) {
-        // Lưu ID phim vào input ẩn
+    // 1. Mở Modal Đặt Vé từ click trực tiếp Suất chiếu
+    function openBookingModalAndPreselect(movieId, movieName, injectedCinemaId) {
         document.getElementById('currentMovieId').value = movieId;
         document.getElementById('modalMovieTitle').innerText = movieName;
 
-        // Đồng bộ dữ liệu ngày
-        selectedDate = ((d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'))(new Date());
+        let cinemaDropdown = document.getElementById('modalCinemaSelect');
+        let selectedCinemaInput = document.querySelector('select[name="cinemaId"]');
+        let urlParams = new URLSearchParams(window.location.search);
+        let selectedDateUrl = urlParams.get('searchDate');
 
-        // Vẽ thanh chọn ngày (7 ngày tới)
-        renderDateBar();
+        // Lấy rạp (nếu có click trực tiếp vào suất của 1 rạp, ưu tiên lấy ID rạp đó)
+        let cinemaVal = injectedCinemaId || (selectedCinemaInput ? selectedCinemaInput.value : '');
+        let dateVal = selectedDateUrl || '';
 
-        // Reset Rạp về mặc định (chưa chọn)
-        document.getElementById('modalCinemaSelect').selectedIndex = 0;
-        // Reset khu vực hiển thị giờ chiếu
-        document.getElementById('showtimeContainer').innerHTML =
-            '<p style="text-align:center; color:#999; margin-top:40px;">Vui lòng chọn Rạp.</p>';
+        // Đổ rạp (nếu có dropdown trong modal)
+        if (cinemaDropdown) {
+             if (cinemaVal) {
+                 cinemaDropdown.value = cinemaVal;
+             } else {
+                 cinemaDropdown.selectedIndex = 0; 
+             }
+        }
 
+        // Cập nhật selectedDate
+        if (dateVal) {
+            selectedDate = dateVal;
+        } else {
+            selectedDate = ((d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'))(new Date());
+        }
+
+        if (typeof renderDateBar === "function") {
+             renderDateBar();
+        }
+
+        let showtimeContainer = document.getElementById('showtimeContainer');
+        if (document.getElementById('bookingModal')) {
+             document.getElementById('bookingModal').style.display = 'flex';
+        }
+
+        if (cinemaVal && typeof loadShowtimes === "function") {
+            loadShowtimes();
+        }
+    }
+
+    // 2. Xác nhận khi Click trực tiếp suất chiếu ở Home
+    function confirmAndBookTicket(movieId, movieName, cinemaId, cinemaName, dateStr, timeStr, showtimeId) {
+        // Đổ dữ liệu vào Giao diện Confirm Modal
+        document.getElementById('lblConfirmMovieName').innerText = movieName;
+        document.getElementById('lblConfirmCinema').innerText = cinemaName;
+        document.getElementById('lblConfirmDate').innerText = dateStr;
+        document.getElementById('lblConfirmTime').innerText = timeStr;
+        
+        // Lưu lại dữ liệu để dùng sau (khi xác nhận hoặc hủy)
+        document.getElementById('hdnParamShowtimeId').value = showtimeId;
+        document.getElementById('hdnParamMovieId').value = movieId;
+        document.getElementById('hdnParamMovieName').value = movieName;
+        document.getElementById('hdnParamCinemaId').value = cinemaId;
+        
         // Hiện Modal
-        document.getElementById('bookingModal').style.display = 'flex';
+        document.getElementById('confirmTicketModal').style.display = 'flex';
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmTicketModal').style.display = 'none';
+        
+        // Hủy -> Chọn lại suất chiếu khác -> Mở preselect modal của hệ thống
+        let movieId = document.getElementById('hdnParamMovieId').value;
+        let movieName = document.getElementById('hdnParamMovieName').value;
+        let cinemaId = document.getElementById('hdnParamCinemaId').value;
+        
+        if (document.getElementById('bookingModal')) {
+             openBookingModalAndPreselect(movieId, movieName, cinemaId);
+        }
+    }
+
+    function proceedToBook() {
+        const url = '[[@{/booking/seat}]]';
+        const showtimeId = document.getElementById('hdnParamShowtimeId').value;
+        window.location.href = `${url}?showtimeId=${showtimeId}`;
     }
 
     // Đóng Modal (Dùng hàm cũ hoặc sửa lại tên cho thống nhất)
@@ -972,8 +943,7 @@
                 <p style="margin-top: 10px;">Đang tìm suất chiếu...</p>
             </div>`;
 
-        // Lấy tự động Context Path từ Thymeleaf bằng /*[[@{/path}]]*/
-        const apiUrl = /*[[@{/api/booking/showtimes}]]*/ '/api/booking/showtimes';
+        const apiUrl = '[[@{/api/booking/showtimes}]]';
 
         fetch(`${apiUrl}?movieId=${movieId}&cinemaId=${cinemaId}&date=${selectedDate}`)
             .then(res => {
@@ -1017,9 +987,11 @@
 
     // 4. Chuyển hướng sang trang chọn ghế
     function bookTicket(showtimeId) {
-        // Sử dụng cú pháp inline javascript của Thymeleaf
-        const bookUrl = /*[[@{/booking/seat}]]*/ '/booking/seat';
-        window.location.href = `${bookUrl}?showtimeId=${showtimeId}`;
+        // Sử dụng cú pháp [[@{...}]] của Thymeleaf để lấy đúng đường dẫn dự án
+        // Ví dụ: nó sẽ tự đổi thành '/Group03_SWP391_war_exploded/booking/seat'
+        const url = '[[@{/booking/seat}]]';
+
+        window.location.href = `${url}?showtimeId=${showtimeId}`;
     }
 
     let slideIndex = 0;

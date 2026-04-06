@@ -224,9 +224,20 @@ public class VoucherServiceImpl implements VoucherService {
                 }
             }
             if (exactVoucher != null) {
-                // Chuyển voucher từ myVouchers sang usedVouchers
+                // Xóa khỏi danh sách Voucher hiện đang sở hữu
                 account.getMyVouchers().remove(exactVoucher);
-                account.getUsedVouchers().add(exactVoucher);
+
+                if (exactVoucher.isPersonal()) {
+                    // NẾU LÀ VOUCHER VIP: Thay vì bỏ vào "túi đã dùng", ta xóa sổ luôn khỏi Hệ thống!
+                    // 1. Đảm bảo gỡ liên kết từ tất cả các account để không lỗi khóa ngoại
+                    clearVoucherFromAllAccounts(exactVoucher.getId());
+                    
+                    // 2. Xóa sạch khỏi CSDL rễ (Mất luôn ở trang Admin)
+                    voucherRepository.delete(exactVoucher.getId());
+                } else {
+                    // VOUCHER THƯỜNG: Chuyển sang túi "đã dùng" và giữ nguyên trong CSDL
+                    account.getUsedVouchers().add(exactVoucher);
+                }
                 session.merge(account);
             }
         }
