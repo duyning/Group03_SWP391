@@ -88,9 +88,15 @@
 
             <div class="promo-section">
                 <label style="font-size: 13px; font-weight: 700;">MÃ GIẢM GIÁ</label>
-                <div style="display: flex; gap: 8px; margin: 10px 0;">
-                    <input type="text" id="couponInput" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                    <button type="button" id="btnApplyVoucher" style="background: #0054a6; color: white; border: none; border-radius: 8px; padding: 0 15px; cursor: pointer;">ÁP DỤNG</button>
+                <div style="margin: 10px 0;">
+                    <button type="button" onclick="openVoucherModal()" id="btnVoucherTrigger" style="width: 100%; background: #0054a6; color: white; border: none; border-radius: 8px; padding: 12px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 15px; transition: 0.2s;">
+                        <span id="selectedVoucherName"><i class="fas fa-ticket-alt" style="margin-right: 8px;"></i> CHỌN VOUCHER</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <!-- Giữ lại nút hủy nếu muốn cho phép hủy voucher -->
+                    <button type="button" onclick="cancelVoucher()" id="btnCancelVoucher" style="width: 100%; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; border-radius: 8px; padding: 8px; cursor: pointer; font-weight: bold; font-size: 13px; margin-top: 10px; display: none;">
+                        HỦY MÃ NÀY
+                    </button>
                 </div>
 
                 <div class="summary-box" style="background: #f8fafc; padding: 15px; border-radius: 12px;">
@@ -122,65 +128,135 @@
     </div>
 </div>
 
+<style>
+/* --- STYLES VOUCHER MODAL --- */
+.voucher-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 10000;
+}
+.voucher-modal {
+    background: #f8fafc; width: 500px; max-width: 95%; max-height: 80vh; border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.voucher-modal-header {
+    background: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+}
+.voucher-modal-header h3 { margin: 0; font-size: 18px; color: #1e293b; font-weight: 800; display: flex; align-items: center; gap: 10px;}
+.voucher-modal-close { font-size: 24px; cursor: pointer; color: #94a3b8; transition: 0.2s; }
+.voucher-modal-close:hover { color: #ef4444; }
+.voucher-modal-body {
+    padding: 20px; overflow-y: auto; flex: 1;
+}
+.voucher-item-ui {
+    background: white; border-radius: 10px; padding: 15px 20px; margin-bottom: 15px;
+    display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+    border: 2px solid transparent; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s;
+}
+.voucher-item-ui:hover { border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+.voucher-icon-ui {
+    background: #eff6ff; color: #3b82f6; width: 50px; height: 50px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 15px;
+}
+.voucher-details-ui { flex: 1; }
+.voucher-code-ui { font-weight: 900; font-size: 16px; color: #1e293b; margin-bottom: 3px; }
+.voucher-desc-ui { font-size: 14px; color: #64748b; margin-bottom: 3px; }
+.voucher-expire-ui { font-size: 12px; color: #ef4444; font-weight: 500;}
+.btn-use-voucher-ui { background: #3b82f6; color: white; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+.btn-use-voucher-ui:hover { background: #2563eb; }
+</style>
+
+<!-- MODAL VOUCHER CỦA TÔI -->
+<div class="voucher-modal-overlay" id="voucherModal">
+    <div class="voucher-modal">
+        <div class="voucher-modal-header">
+            <h3><i class="fas fa-ticket-alt" style="color: #0054a6;"></i> VOUCHER CỦA TÔI</h3>
+            <span class="voucher-modal-close" onclick="closeVoucherModal()">✕</span>
+        </div>
+        <div class="voucher-modal-body">
+            
+            <th:block th:if="${#lists.isEmpty(myVouchers)}">
+                <div style="text-align: center; padding: 50px 20px;">
+                    <i class="fas fa-box-open" style="font-size: 50px; color: #cbd5e1; margin-bottom: 20px;"></i>
+                    <h3 style="color: #475569; margin-bottom: 10px;">Ví Voucher Trống</h3>
+                    <p style="color: #94a3b8; font-size: 14px;">Bạn chưa lưu hoặc chưa sở hữu mã quà tặng nào. Vui lòng lấy mã tại trang Vouchers.</p>
+                </div>
+            </th:block>
+            
+            <th:block th:each="v : ${myVouchers}">
+                <div class="voucher-item-ui" th:onclick="applyDirectly([[${v.code}]], [[${v.discountPercent}]])">
+                    <div class="voucher-icon-ui"><i class="fas fa-gift"></i></div>
+                    <div class="voucher-details-ui">
+                        <div class="voucher-code-ui" th:text="${v.code}">CODE123</div>
+                        <div class="voucher-desc-ui" th:text="'Giảm ' + ${v.discountPercent} + '% cho toàn bộ đơn hàng'">Giảm 10%</div>
+                        <div class="voucher-expire-ui" th:text="'HSD: ' + ${#temporals.format(v.expiryDate, 'dd/MM/yyyy HH:mm')}">HSD: 20/12/2026</div>
+                    </div>
+                    <button type="button" class="btn-use-voucher-ui">ÁP DỤNG</button>
+                </div>
+            </th:block>
+            
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    document.addEventListener('DOMContentLoaded', function() {
-        const originalAmount = /*[[${totalAmount}]]*/ 0;
+    const originalAmount = /*[[${totalAmount}]]*/ 0;
 
-        document.getElementById('btnApplyVoucher').addEventListener('click', function() {
-            const code = document.getElementById('couponInput').value.trim();
-            if (!code) {
-                Swal.fire('Opps!', 'Vui lòng nhập mã giảm giá', 'warning');
-                return;
-            }
+    function openVoucherModal() {
+        document.getElementById('voucherModal').style.display = 'flex';
+    }
+    
+    function closeVoucherModal() {
+        document.getElementById('voucherModal').style.display = 'none';
+    }
 
-            const url = /*[[@{/api/vouchers/check}]]*/ '/api/vouchers/check';
+    function applyDirectly(code, percent) {
+        closeVoucherModal();
 
-            Swal.fire({ title: 'Đang kiểm tra...', didOpen: () => Swal.showLoading() });
+        // Tính toán
+        const discount = (originalAmount * percent) / 100;
+        const final = originalAmount - discount;
 
-            fetch(`${url}?code=${code}`)
-                .then(async res => {
-                    const data = await res.json();
-                    if (!res.ok) {
-                        // Nếu lỗi (400, 404), quăng message lỗi từ Controller vào catch
-                        throw new Error(data.message || 'Lỗi không xác định');
-                    }
-                    return data; // Voucher object
-                })
-                .then(voucher => {
-                    Swal.close();
+        // Cập nhật giao diện nút Bấm
+        document.getElementById('btnVoucherTrigger').style.background = '#059669'; // Chuyển màu xanh lá mạ
+        document.getElementById('selectedVoucherName').innerHTML = `<i class="fas fa-check-circle" style="margin-right: 8px;"></i> ${code} (-${percent}%)`;
+        document.getElementById('btnCancelVoucher').style.display = 'block';
 
-                    // Tính toán dựa trên thuộc tính discountPercent của đối tượng Voucher
-                    const percent = voucher.discountPercent;
-                    const discount = (originalAmount * percent) / 100;
-                    const final = originalAmount - discount;
+        // Cập nhật Box Tổng tiền
+        document.getElementById('discountRow').style.display = 'flex';
+        document.getElementById('discountPercent').innerText = percent;
+        document.getElementById('discountValueDisplay').innerText = discount.toLocaleString('vi-VN');
+        document.getElementById('finalTotalDisplay').innerText = final.toLocaleString('vi-VN') + ' đ';
 
-                    // 1. Cập nhật giao diện hiển thị
-                    document.getElementById('discountRow').style.display = 'flex';
-                    document.getElementById('discountPercent').innerText = percent;
-                    document.getElementById('discountValueDisplay').innerText = discount.toLocaleString('vi-VN');
-                    document.getElementById('finalTotalDisplay').innerText = final.toLocaleString('vi-VN') + ' đ';
+        // Cập nhật Hidden Form
+        document.getElementById('finalAmountInput').value = final;
+        document.getElementById('voucherCodeInput').value = code;
 
-                    // 2. Ghi dữ liệu vào Hidden Input để gửi Form sang VNPAY
-                    document.getElementById('finalAmountInput').value = final;
-                    document.getElementById('voucherCodeInput').value = voucher.code;
-
-                    Swal.fire('Thành công', `Mã ${voucher.code} đã được áp dụng (Giảm ${percent}%)`, 'success');
-                })
-                .catch(err => {
-                    Swal.close();
-                    Swal.fire('Lỗi', err.message, 'error');
-
-                    // Reset về trạng thái ban đầu nếu áp dụng thất bại
-                    document.getElementById('discountRow').style.display = 'none';
-                    document.getElementById('finalTotalDisplay').innerText = originalAmount.toLocaleString('vi-VN') + ' đ';
-                    document.getElementById('finalAmountInput').value = originalAmount;
-                    document.getElementById('voucherCodeInput').value = "";
-                });
+        Swal.fire({
+            title: 'Thành công!',
+            text: `Đã áp dụng mã giảm giá ${percent}%`,
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
         });
-    });
+    }
+
+    function cancelVoucher() {
+        // Reset về nút chọn Voucher
+        document.getElementById('btnVoucherTrigger').style.background = '#0054a6';
+        document.getElementById('selectedVoucherName').innerHTML = `<i class="fas fa-ticket-alt" style="margin-right: 8px;"></i> CHỌN VOUCHER`;
+        document.getElementById('btnCancelVoucher').style.display = 'none';
+
+        // Reset tính toán
+        document.getElementById('discountRow').style.display = 'none';
+        document.getElementById('finalTotalDisplay').innerText = originalAmount.toLocaleString('vi-VN') + ' đ';
+        
+        document.getElementById('finalAmountInput').value = originalAmount;
+        document.getElementById('voucherCodeInput').value = "";
+    }
     /*]]>*/
 </script>
 

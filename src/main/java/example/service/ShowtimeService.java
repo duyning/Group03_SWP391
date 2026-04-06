@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 @Service
@@ -32,6 +33,22 @@ public class ShowtimeService {
 
     public List<Showtime> getSchedule(int cinemaId, LocalDate date) {
         return showtimeRepository.findByCinemaAndDate(cinemaId, date);
+    }
+
+    public List<Integer> getActiveMovieIds(Integer cinemaId) {
+        return showtimeRepository.findActiveMovieIds(cinemaId, LocalDate.now());
+    }
+
+    public List<LocalDate> getAvailableDates(Integer cinemaId) {
+        return showtimeRepository.findDatesWithShowtimes(cinemaId, LocalDate.now());
+    }
+
+    public Showtime getFirstAvailableShowtime(int movieId, Integer cinemaId) {
+        return showtimeRepository.findFirstAvailableShowtime(movieId, cinemaId, LocalDate.now(), LocalTime.now());
+    }
+
+    public List<LocalDate> getAvailableDatesForMovie(int movieId, Integer cinemaId) {
+        return showtimeRepository.findDatesWithShowtimesForMovie(movieId, cinemaId, LocalDate.now());
     }
 
     @Transactional
@@ -130,6 +147,10 @@ public class ShowtimeService {
 
     public List<Showtime> findShowtimesForBooking(int movieId, int cinemaId, LocalDate date) {
         return showtimeRepository.findForBooking(movieId, cinemaId, date);
+    }
+
+    public List<Showtime> getShowtimesByDate(LocalDate date) {
+        return showtimeRepository.findByDate(date);
     }
 
     // --- HÀM LẤY SƠ ĐỒ GHẾ (Trả về List Map) ---

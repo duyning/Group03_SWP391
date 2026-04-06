@@ -69,6 +69,28 @@ public class BookingRestController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/first-available")
+    public ResponseEntity<?> getFirstAvailableShowtime(
+            @RequestParam int movieId,
+            @RequestParam(required = false) Integer cinemaId) {
+        Showtime st = showtimeService.getFirstAvailableShowtime(movieId, cinemaId);
+        if (st == null) return ResponseEntity.notFound().build();
+        
+        Map<String, Object> map = new HashMap<>();
+        map.put("cinemaId", st.getRoom().getCinema().getId());
+        map.put("date", st.getStartDate().toString());
+        return ResponseEntity.ok(map);
+    }
+
+    @GetMapping("/available-dates")
+    public ResponseEntity<?> getAvailableDatesForMovie(
+            @RequestParam int movieId,
+            @RequestParam(required = false) Integer cinemaId) {
+        List<LocalDate> dates = showtimeService.getAvailableDatesForMovie(movieId, cinemaId);
+        List<String> result = dates.stream().map(LocalDate::toString).collect(Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
+
     // API 2: Lấy sơ đồ ghế cho một suất chiếu cụ thể
     // URL ví dụ: /api/booking/seat-map/123
     @GetMapping("/seat-map/{showtimeId}")

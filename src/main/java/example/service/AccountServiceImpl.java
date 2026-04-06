@@ -57,6 +57,28 @@ public class AccountServiceImpl implements AccountService {
                 authorities);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<example.entity.Voucher> getAvailableVouchers(String email) {
+        Account user = accountRepository.findByEmail(email);
+        if (user == null) return java.util.Collections.emptyList();
+        
+        // Buộc Hibernate tải dữ liệu của collection (Initialize Proxy) vì hàm này đang nằm trong Transactional
+        org.hibernate.Hibernate.initialize(user.getMyVouchers());
+        org.hibernate.Hibernate.initialize(user.getUsedVouchers());
+
+        java.util.Set<example.entity.Voucher> availableVouchers = new java.util.HashSet<>(user.getMyVouchers());
+        availableVouchers.removeAll(user.getUsedVouchers());
+
+        // Lọc bỏ Voucher hết hạn hoặc bị khoá (không active)
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        List<example.entity.Voucher> validVouchers = availableVouchers.stream()
+                .filter(v -> v.getExpiryDate() != null && !v.getExpiryDate().isBefore(now))
+                .collect(java.util.stream.Collectors.toList());
+
+        return validVouchers;
+    }
+
     // ===== REGISTER =====
     @Override
     @Transactional

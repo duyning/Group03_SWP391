@@ -26,6 +26,75 @@ public class ShowtimeRepository {
                 .list();
     }
 
+    public List<Integer> findActiveMovieIds(Integer cinemaId, LocalDate current) {
+        String hql = "SELECT DISTINCT s.movie.id FROM Showtime s WHERE s.startDate >= :current";
+        if (cinemaId != null) {
+            hql += " AND s.room.cinema.id = :cinemaId";
+        }
+        var query = sessionFactory.getCurrentSession()
+                .createQuery(hql, Integer.class)
+                .setParameter("current", current);
+        if (cinemaId != null) {
+            query.setParameter("cinemaId", cinemaId);
+        }
+        return query.list();
+    }
+
+    public List<LocalDate> findDatesWithShowtimes(Integer cinemaId, LocalDate fromDate) {
+        String hql = "SELECT DISTINCT s.startDate FROM Showtime s WHERE s.startDate >= :fromDate";
+        if (cinemaId != null) {
+            hql += " AND s.room.cinema.id = :cinemaId";
+        }
+        hql += " ORDER BY s.startDate ASC";
+
+        var query = sessionFactory.getCurrentSession()
+                .createQuery(hql, LocalDate.class)
+                .setParameter("fromDate", fromDate);
+        if (cinemaId != null) {
+            query.setParameter("cinemaId", cinemaId);
+        }
+        return query.setMaxResults(14).list(); // Giới hạn lấy tối đa 14 ngày tới
+    }
+
+    public Showtime findFirstAvailableShowtime(int movieId, Integer cinemaId, LocalDate currentDate, LocalTime currentTime) {
+        String hql = "FROM Showtime s WHERE s.movie.id = :movieId " +
+                     "AND (s.startDate > :currentDate OR (s.startDate = :currentDate AND s.startTime >= :currentTime)) ";
+        if (cinemaId != null) {
+            hql += "AND s.room.cinema.id = :cinemaId ";
+        }
+        hql += "ORDER BY s.startDate ASC, s.startTime ASC";
+
+        var query = sessionFactory.getCurrentSession()
+                .createQuery(hql, Showtime.class)
+                .setParameter("movieId", movieId)
+                .setParameter("currentDate", currentDate)
+                .setParameter("currentTime", currentTime)
+                .setMaxResults(1);
+
+        if (cinemaId != null) {
+            query.setParameter("cinemaId", cinemaId);
+        }
+        List<Showtime> results = query.list();
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    public List<LocalDate> findDatesWithShowtimesForMovie(int movieId, Integer cinemaId, LocalDate fromDate) {
+        String hql = "SELECT DISTINCT s.startDate FROM Showtime s WHERE s.movie.id = :movieId AND s.startDate >= :fromDate ";
+        if (cinemaId != null) {
+            hql += "AND s.room.cinema.id = :cinemaId ";
+        }
+        hql += "ORDER BY s.startDate ASC";
+
+        var query = sessionFactory.getCurrentSession()
+                .createQuery(hql, LocalDate.class)
+                .setParameter("movieId", movieId)
+                .setParameter("fromDate", fromDate);
+        if (cinemaId != null) {
+            query.setParameter("cinemaId", cinemaId);
+        }
+        return query.list();
+    }
+
     public void save(Showtime showtime) {
         sessionFactory.getCurrentSession().merge(showtime);
     }
@@ -61,6 +130,17 @@ public class ShowtimeRepository {
                 .createQuery(hql, Showtime.class)
                 .setParameter("movieId", movieId)
                 .setParameter("cinemaId", cinemaId)
+                .setParameter("date", date)
+                .list();
+    }
+
+    public List<Showtime> findByDate(LocalDate date) {
+        String hql = "FROM Showtime s " +
+                "WHERE s.startDate = :date " +
+                "ORDER BY s.room.cinema.id, s.startTime ASC";
+
+        return sessionFactory.getCurrentSession()
+                .createQuery(hql, Showtime.class)
                 .setParameter("date", date)
                 .list();
     }
