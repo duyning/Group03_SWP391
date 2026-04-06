@@ -131,7 +131,7 @@ public class HomeController {
 
         List<Movie> filteredMovies = combinedMovies.stream()
             .distinct()
-            .filter(m -> showtimeMap.containsKey(m.getId())) // CHỈ lấy phim CÓ lịch chiếu
+            .filter(m -> showtimeMap.containsKey(m.getId())) // CHỈ lấy phim CÓ lịch chiếu thôi
             .collect(Collectors.toList());
 
         model.addAttribute("availableDates", availableDates);

@@ -138,7 +138,7 @@ public class BookingController {
 
         Showtime showtime = showtimeService.getShowtimeById(showtimeId);
         
-        // --- NẠP VOUCHERS CỦA USER ĐỂ HIỂN THỊ DROPDOWN TỰ ĐỘNG ---
+        // --- Lay VOUCHERS CỦA USER ĐỂ HIỂN THỊ DROPDOWN TỰ ĐỘNG ---
         if (principal != null) {
             List<Voucher> availableVouchers = accountService.getAvailableVouchers(principal.getName());
             model.addAttribute("myVouchers", availableVouchers);
